@@ -11,6 +11,11 @@ import BB25_3D_Assets
 
 struct ContentView: View {
     
+    enum CameraType {
+        case virtual, spatialTracking
+    }
+    @State var camera: CameraType = .spatialTracking
+    
     @State var fwd = false
     @State var rev = false
     @State var ccw = false
@@ -22,14 +27,24 @@ struct ContentView: View {
     
     var body: some View {
         RealityView { content in
-            content.camera = .spatialTracking
+            switch camera {
+            case .virtual: content.camera = .virtual
+            case .spatialTracking: content.camera = .spatialTracking
+            }
+            
             resetScene(in: content)
         } update: { content in
+            switch camera {
+            case .virtual: content.camera = .virtual
+            case .spatialTracking: content.camera = .spatialTracking
+            }
+            
             if requestReset {
                 resetScene(in: content)
             }
             print("update... requestReset: \(requestReset), [\(fwd), \(rev), \(ccw), \(cw)]")
         }
+        .realityViewCameraControls(.orbit)
         .overlay(alignment: .bottom) {
             controls
         }
@@ -40,7 +55,14 @@ struct ContentView: View {
     func resetScene(in content: RealityViewCameraContent) {
         DispatchQueue.main.async {
             anchor?.removeFromParent()
-            anchor = AnchorEntity(.plane(.horizontal, classification: .any,  minimumBounds: SIMD2<Float>(0.2, 0.2)))
+            
+            switch camera {
+            case .virtual:
+                anchor = AnchorEntity(world: .zero)
+            case .spatialTracking:
+                anchor = AnchorEntity(.plane(.horizontal, classification: .any,  minimumBounds: SIMD2<Float>(0.2, 0.2)))
+            }
+            
             guard let anchor else {
                 requestReset = false
                 return
@@ -48,12 +70,19 @@ struct ContentView: View {
             
             if let scene = try? Entity.load(named: "Scene", in: BB25_3D_Assets.bB25_3D_AssetsBundle) {
                 scene.setParent(anchor)
+                setupPhysics(in: scene)
             }
             
             content.add(anchor)
             
             requestReset = false
         }
+    }
+    
+    func setupPhysics(in scene: Entity) {
+        let chassis = scene.findEntity(named: "Chassis")
+        let physics = chassis?.components[PhysicsBodyComponent.self]
+        print("physics: \(physics?.massProperties)")
     }
     
     /// The control overlay for forward, reverse, counter-clockwise, and clockwise motion
@@ -110,5 +139,5 @@ struct ContentView: View {
 }
 
 #Preview {
-    ContentView()
+    ContentView(camera: .virtual)
 }
