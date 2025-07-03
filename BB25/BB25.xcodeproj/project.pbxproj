@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		8A517C762E16C614000F4779 /* BB25_3D_Assets in Frameworks */ = {isa = PBXBuildFile; productRef = 8A517C752E16C614000F4779 /* BB25_3D_Assets */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXContainerItemProxy section */
 		8A517C582E16BCCB000F4779 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -52,6 +56,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8A517C762E16C614000F4779 /* BB25_3D_Assets in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -112,6 +117,7 @@
 			);
 			name = BB25;
 			packageProductDependencies = (
+				8A517C752E16C614000F4779 /* BB25_3D_Assets */,
 			);
 			productName = BB25;
 			productReference = 8A517C472E16BCC9000F4779 /* BB25.app */;
@@ -195,6 +201,9 @@
 			);
 			mainGroup = 8A517C3E2E16BCC9000F4779;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				8A517C742E16C614000F4779 /* XCLocalSwiftPackageReference "../BB25_3D_Assets" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8A517C482E16BCC9000F4779 /* Products */;
 			projectDirPath = "";
@@ -399,6 +408,7 @@
 				DEVELOPMENT_TEAM = 59VPT4KMHW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera is used to render an augmented reality view";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -428,6 +438,7 @@
 				DEVELOPMENT_TEAM = 59VPT4KMHW;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Camera is used to render an augmented reality view";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -558,6 +569,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		8A517C742E16C614000F4779 /* XCLocalSwiftPackageReference "../BB25_3D_Assets" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = ../BB25_3D_Assets;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		8A517C752E16C614000F4779 /* BB25_3D_Assets */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = BB25_3D_Assets;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 8A517C3F2E16BCC9000F4779 /* Project object */;
 }
