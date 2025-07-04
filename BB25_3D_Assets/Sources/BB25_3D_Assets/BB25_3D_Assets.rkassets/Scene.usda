@@ -10,21 +10,27 @@
 
 def Xform "Root"
 {
-    reorder nameChildren = ["BoEBot", "Base"]
+    reorder nameChildren = ["BoEBot", "Base", "X", "Y"]
     def "BoEBot" (
         active = true
         customData = {
-            float3 rotationEulerHint = (0, 0, 0)
+            float3 rotationEulerHint = (6.2803687e-16, 0, 2.107342e-8)
         }
         references = @BoEBot.usdz@
     )
     {
-        quatf xformOp:orient = (1, 0, 0, 0)
+        quatf xformOp:orient = (1, 3.1401843e-16, 3.3087213e-24, 1.053671e-8)
         float3 xformOp:scale = (1, 1, 1)
+        float3 xformOp:translate = (0, 0, 0.2)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
 
         over "RearWheel"
         {
+            quatf xformOp:orient = (1, 0, 0, 0)
+            float3 xformOp:scale = (1, 1, 1)
+            double3 xformOp:translate = (-0.13075204193592072, 0, 0.01269999984651804)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
             def RealityKitComponent "Collider"
             {
                 uint group = 1
@@ -42,6 +48,32 @@ def Xform "Root"
                     {
                         float3 position = (3.259629e-9, 3.259629e-9, 0)
                     }
+                }
+            }
+
+            def RealityKitComponent "RigidBody"
+            {
+                uniform token info:id = "RealityKit.RigidBody"
+                bool lockRotationX = 0
+                bool lockRotationY = 0
+                bool lockRotationZ = 0
+                bool lockTranslationX = 0
+                bool lockTranslationY = 0
+                bool lockTranslationZ = 0
+                token motionType = "Dynamic"
+
+                def RealityKitStruct "massFrame"
+                {
+                    float3 m_inertia = (0, 0, 0)
+                    float m_mass = 0.01
+
+                    def RealityKitStruct "m_pose"
+                    {
+                    }
+                }
+
+                def RealityKitStruct "material"
+                {
                 }
             }
         }
@@ -62,7 +94,7 @@ def Xform "Root"
                         float3 extent = (7, 7, 0.87251514)
                         float height = 7
                         float radius = 3.5
-                        token shapeType = "Capsule"
+                        token shapeType = "Sphere"
 
                         def RealityKitStruct "pose"
                         {
@@ -72,11 +104,15 @@ def Xform "Root"
 
                 def RealityKitComponent "RigidBody"
                 {
-                    bool gravityEnabled = 0
+                    bool gravityEnabled = 1
                     uniform token info:id = "RealityKit.RigidBody"
+                    token motionType = "Dynamic"
 
                     def RealityKitStruct "massFrame"
                     {
+                        float3 m_inertia = (0.00001, 0.00001, 0.00001)
+                        float m_mass = 0.25
+
                         def RealityKitStruct "m_pose"
                         {
                         }
@@ -84,6 +120,9 @@ def Xform "Root"
 
                     def RealityKitStruct "material"
                     {
+                        double dynamicFriction = 0.7
+                        double restitution = 0.7
+                        double staticFriction = 0.7
                     }
                 }
             }
@@ -100,7 +139,9 @@ def Xform "Root"
                     def RealityKitStruct "Shape"
                     {
                         float3 extent = (7, 7, 0.87251514)
-                        token shapeType = "Box"
+                        float height = 7
+                        float radius = 3.5
+                        token shapeType = "Sphere"
 
                         def RealityKitStruct "pose"
                         {
@@ -110,11 +151,15 @@ def Xform "Root"
 
                 def RealityKitComponent "RigidBody"
                 {
-                    bool gravityEnabled = 0
+                    bool gravityEnabled = 1
                     uniform token info:id = "RealityKit.RigidBody"
+                    token motionType = "Dynamic"
 
                     def RealityKitStruct "massFrame"
                     {
+                        float3 m_inertia = (0.00001, 0.00001, 0.00001)
+                        float m_mass = 0.25
+
                         def RealityKitStruct "m_pose"
                         {
                         }
@@ -122,6 +167,9 @@ def Xform "Root"
 
                     def RealityKitStruct "material"
                     {
+                        double dynamicFriction = 0.7
+                        double restitution = 0.7
+                        double staticFriction = 0.7
                     }
                 }
             }
@@ -129,9 +177,10 @@ def Xform "Root"
 
         over "Chassis"
         {
-            def RealityKitComponent "Collider" (
-                active = false
-            )
+            float3 xformOp:translate = (0, 0, 0)
+            uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+            def RealityKitComponent "Collider"
             {
                 uint group = 1
                 uniform token info:id = "RealityKit.Collider"
@@ -140,7 +189,7 @@ def Xform "Root"
 
                 def RealityKitStruct "Shape"
                 {
-                    float3 extent = (0.1329545, 0.108380586, 0.06943668)
+                    float3 extent = (0.1329545, 0.05, 0.06943668)
                     token shapeType = "Box"
 
                     def RealityKitStruct "pose"
@@ -152,8 +201,9 @@ def Xform "Root"
 
             def RealityKitComponent "RigidBody"
             {
-                bool gravityEnabled = 0
+                bool gravityEnabled = 1
                 uniform token info:id = "RealityKit.RigidBody"
+                token motionType = "Dynamic"
 
                 def RealityKitStruct "massFrame"
                 {
@@ -161,7 +211,7 @@ def Xform "Root"
 
                     def RealityKitStruct "m_pose"
                     {
-                        float3 position = (-0.0005, 0, 0.0005)
+                        float3 position = (-0.05, 0, 0.05)
                     }
                 }
 
@@ -169,170 +219,35 @@ def Xform "Root"
                 {
                 }
             }
+
+            def RealityKitComponent "MotionState"
+            {
+                uniform token info:id = "RealityKit.MotionState"
+                float3 m_userSetAngularVelocity = (0, 0, 0)
+                uint m_userSetAngularVelocityVersion = 1
+                float3 m_userSetLinearVelocity = (0.1, 0, 0)
+                uint m_userSetLinearVelocityVersion = 1
+            }
         }
     }
 
-    def Cube "Base" (
+    def Cylinder "Base" (
         active = true
         prepend apiSchemas = ["MaterialBindingAPI"]
+        customData = {
+            float3 rotationEulerHint = (1.5707964, 0, 0)
+        }
     )
     {
-        rel material:binding = </Root/Base/DefaultMaterial> (
+        uniform token axis = "Y"
+        double height = 0.05
+        rel material:binding = </GridMaterial> (
             bindMaterialAs = "weakerThanDescendants"
         )
-        double size = 2
-        float3 xformOp:scale = (1, 1, 1)
-        float3 xformOp:translate = (0, 0, -1)
+        double radius = 1
+        quatf xformOp:orient = (0.70710677, 0.70710677, 0, 0)
+        float3 xformOp:translate = (0, 0, -0.025)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
-
-        def Material "DefaultMaterial"
-        {
-            token outputs:mtlx:surface.connect = </Root/Base/DefaultMaterial/PreviewSurface.outputs:out>
-            token outputs:realitykit:vertex
-            token outputs:surface.connect = </Root/Base/DefaultMaterial/DefaultSurfaceShader.outputs:surface>
-            float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (0, 110.5)
-            int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 649
-
-            def Shader "DefaultSurfaceShader" (
-                active = false
-            )
-            {
-                uniform token info:id = "UsdPreviewSurface"
-                color3f inputs:diffuseColor = (1, 1, 1)
-                float inputs:roughness = 0.75
-                token outputs:surface
-            }
-
-            def Shader "PreviewSurface"
-            {
-                uniform token info:id = "ND_UsdPreviewSurface_surfaceshader"
-                float inputs:clearcoatRoughness
-                color3f inputs:diffuseColor = (0, 0, 0) (
-                    colorSpace = "srgb_texture"
-                )
-                color3f inputs:emissiveColor.connect = </Root/Base/DefaultMaterial/ConstantColor3.outputs:out>
-                float inputs:ior
-                float inputs:metallic = 1
-                float inputs:occlusion
-                float inputs:opacity = 0.2
-                float inputs:roughness = 1
-                token outputs:out
-                float2 ui:nodegraph:node:pos = (-255, 105)
-                int ui:nodegraph:node:stackingOrder = 647
-                string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["Advanced"]
-            }
-
-            def Shader "Position"
-            {
-                uniform token info:id = "ND_position_vector3"
-                float3 outputs:out
-                float2 ui:nodegraph:node:pos = (-1372.7766, 67.54914)
-                int ui:nodegraph:node:stackingOrder = 833
-            }
-
-            def Shader "Modulo"
-            {
-                uniform token info:id = "ND_modulo_float"
-                float inputs:in1.connect = </Root/Base/DefaultMaterial/Separate3.outputs:outx>
-                float inputs:in2.connect = </Root/Base/DefaultMaterial/LineInterval.outputs:out>
-                float outputs:out
-                float2 ui:nodegraph:node:pos = (-1023.6829, 59.439762)
-                int ui:nodegraph:node:stackingOrder = 833
-            }
-
-            def Shader "Separate3"
-            {
-                uniform token info:id = "ND_separate3_vector3"
-                float3 inputs:in.connect = </Root/Base/DefaultMaterial/Position.outputs:out>
-                float outputs:outx
-                float outputs:outy
-                float outputs:outz
-                float2 ui:nodegraph:node:pos = (-1194.9094, 73.127266)
-                int ui:nodegraph:node:stackingOrder = 833
-            }
-
-            def Shader "Abs"
-            {
-                uniform token info:id = "ND_absval_float"
-                float inputs:in.connect = </Root/Base/DefaultMaterial/Modulo.outputs:out>
-                float outputs:out
-                float2 ui:nodegraph:node:pos = (-894.4017, 68.17414)
-                int ui:nodegraph:node:stackingOrder = 833
-            }
-
-            def Shader "ConstantColor3"
-            {
-                uniform token info:id = "ND_constant_color3"
-                color3f inputs:value = (0, 0, 0)
-                color3f inputs:value.connect = </Root/Base/DefaultMaterial/IfGreaterOrEqual.outputs:out>
-                color3f outputs:out
-                float2 ui:nodegraph:node:pos = (-433.09375, 158.0625)
-                int ui:nodegraph:node:stackingOrder = 643
-            }
-
-            def Shader "IfGreaterOrEqual"
-            {
-                uniform token info:id = "ND_ifgreatereq_color3"
-                color3f inputs:in1
-                color3f inputs:in2 = (0.000014713969, 0.9957774, 0.001993161) (
-                    colorSpace = "lin_srgb"
-                )
-                float inputs:value1.connect = </Root/Base/DefaultMaterial/Min.outputs:out>
-                float inputs:value2 = 0.01
-                float inputs:value2.connect = </Root/Base/DefaultMaterial/LineWidth.outputs:out>
-                color3f outputs:out
-                float2 ui:nodegraph:node:pos = (-566.60156, 139.54297)
-                int ui:nodegraph:node:stackingOrder = 628
-            }
-
-            def Shader "Abs_1"
-            {
-                uniform token info:id = "ND_absval_float"
-                float inputs:in.connect = </Root/Base/DefaultMaterial/Modulo_1.outputs:out>
-                float outputs:out
-                float2 ui:nodegraph:node:pos = (-896.3587, 132.73663)
-                int ui:nodegraph:node:stackingOrder = 833
-            }
-
-            def Shader "Modulo_1"
-            {
-                uniform token info:id = "ND_modulo_float"
-                float inputs:in1.connect = </Root/Base/DefaultMaterial/Separate3.outputs:outy>
-                float inputs:in2.connect = </Root/Base/DefaultMaterial/LineInterval.outputs:out>
-                float outputs:out
-                float2 ui:nodegraph:node:pos = (-1025.6399, 124.002266)
-                int ui:nodegraph:node:stackingOrder = 833
-                string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["inputs:in1"]
-            }
-
-            def Shader "Min"
-            {
-                uniform token info:id = "ND_min_float"
-                float inputs:in1.connect = </Root/Base/DefaultMaterial/Abs.outputs:out>
-                float inputs:in2.connect = </Root/Base/DefaultMaterial/Abs_1.outputs:out>
-                float outputs:out
-                float2 ui:nodegraph:node:pos = (-759.6048, 95.61164)
-                int ui:nodegraph:node:stackingOrder = 833
-            }
-
-            def Shader "LineWidth"
-            {
-                uniform token info:id = "ND_constant_float"
-                float inputs:value = 0.0025
-                float outputs:out
-                float2 ui:nodegraph:node:pos = (-789.6373, 214.76198)
-                int ui:nodegraph:node:stackingOrder = 836
-            }
-
-            def Shader "LineInterval"
-            {
-                uniform token info:id = "ND_constant_float"
-                float inputs:value = 0.1
-                float outputs:out
-                float2 ui:nodegraph:node:pos = (-1205.3838, 213.42612)
-                int ui:nodegraph:node:stackingOrder = 839
-            }
-        }
 
         def RealityKitComponent "Collider"
         {
@@ -343,7 +258,7 @@ def Xform "Root"
 
             def RealityKitStruct "Shape"
             {
-                float3 extent = (1, 1, 1)
+                float3 extent = (2, 0.05, 2)
                 token shapeType = "Box"
 
                 def RealityKitStruct "pose"
@@ -351,6 +266,217 @@ def Xform "Root"
                 }
             }
         }
+
+        def RealityKitComponent "RigidBody"
+        {
+            bool gravityEnabled = 0
+            uniform token info:id = "RealityKit.RigidBody"
+            token motionType = "Static"
+
+            def RealityKitStruct "massFrame"
+            {
+                def RealityKitStruct "m_pose"
+                {
+                }
+            }
+
+            def RealityKitStruct "material"
+            {
+                double dynamicFriction = 0.7
+                double restitution = 0.7
+                double staticFriction = 0.7
+            }
+        }
+    }
+
+    def Capsule "X" (
+        active = true
+        prepend apiSchemas = ["MaterialBindingAPI"]
+        customData = {
+            float3 rotationEulerHint = (0, 0, 1.5707964)
+        }
+    )
+    {
+        uniform token axis = "Y"
+        double height = 1
+        rel material:binding = </Root/X/Red>
+        double radius = 0.001
+        quatf xformOp:orient = (0.70710677, 0, 0, 0.70710677)
+        uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
+
+        def Material "Red"
+        {
+            token outputs:mtlx:surface
+            token outputs:realitykit:vertex
+            token outputs:surface.connect = </Root/X/Red/DefaultSurfaceShader.outputs:surface>
+
+            def Shader "DefaultSurfaceShader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (1, 0.14913142, 0) (
+                    colorSpace = "srgb_texture"
+                )
+                float inputs:roughness = 0.75
+                token outputs:surface
+            }
+        }
+    }
+
+    def Capsule "Y" (
+        active = true
+        prepend apiSchemas = ["MaterialBindingAPI"]
+    )
+    {
+        uniform token axis = "Y"
+        double height = 1
+        rel material:binding = </Root/Y/Green>
+        double radius = 0.001
+
+        def Material "Green"
+        {
+            token outputs:mtlx:surface
+            token outputs:realitykit:vertex
+            token outputs:surface.connect = </Root/Y/Green/DefaultSurfaceShader.outputs:surface>
+            float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (0, 110.5)
+
+            def Shader "DefaultSurfaceShader"
+            {
+                uniform token info:id = "UsdPreviewSurface"
+                color3f inputs:diffuseColor = (0, 0.5603183, 0) (
+                    colorSpace = "srgb_texture"
+                )
+                float inputs:roughness = 0.75
+                token outputs:surface
+            }
+        }
+    }
+}
+
+def Material "GridMaterial"
+{
+    color3f inputs:GridColor = (0.55634254, 0.9793455, 0) (
+        colorSpace = "srgb_texture"
+        customData = {
+            dictionary realitykit = {
+                float2 positionInSubgraph = (-449.4229, 348.09995)
+                int stackingOrderInSubgraph = 1435
+            }
+        }
+    )
+    float inputs:LineInterval = 0.1 (
+        customData = {
+            dictionary realitykit = {
+                float2 positionInSubgraph = (-1374.2909, 198.3791)
+                int stackingOrderInSubgraph = 1522
+            }
+        }
+    )
+    float inputs:LineWidth = 0.001 (
+        customData = {
+            dictionary realitykit = {
+                float2 positionInSubgraph = (-1116.6261, 209.2225)
+                int stackingOrderInSubgraph = 1522
+            }
+        }
+    )
+    token outputs:mtlx:surface.connect = </GridMaterial/PreviewSurface.outputs:out>
+    token outputs:realitykit:vertex
+    token outputs:surface.connect = </GridMaterial/DefaultSurfaceShader.outputs:surface>
+    float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (-2.9951794, 406.07605)
+    int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 1435
+
+    def Shader "DefaultSurfaceShader" (
+        active = false
+    )
+    {
+        uniform token info:id = "UsdPreviewSurface"
+        color3f inputs:diffuseColor = (1, 1, 1)
+        float inputs:roughness = 0.75
+        token outputs:surface
+    }
+
+    def Shader "PreviewSurface"
+    {
+        uniform token info:id = "ND_UsdPreviewSurface_surfaceshader"
+        float inputs:clearcoatRoughness
+        color3f inputs:diffuseColor = (0, 0, 0) (
+            colorSpace = "srgb_texture"
+        )
+        color3f inputs:emissiveColor.connect = </GridMaterial.inputs:GridColor>
+        float inputs:ior
+        float inputs:metallic = 1
+        float3 inputs:normal
+        float inputs:occlusion
+        float inputs:opacity = 0.2
+        float inputs:opacity.connect = </GridMaterial/IfGreaterOrEqual_4.outputs:out>
+        float inputs:roughness = 1
+        token outputs:out
+        float2 ui:nodegraph:node:pos = (-225.80807, 289.92102)
+        int ui:nodegraph:node:stackingOrder = 1531
+        string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["Advanced"]
+    }
+
+    def Shader "Position"
+    {
+        uniform token info:id = "ND_position_vector3"
+        string inputs:space = "world"
+        float3 outputs:out
+        float2 ui:nodegraph:node:pos = (-1379.0963, 131.63063)
+        int ui:nodegraph:node:stackingOrder = 1522
+        string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["outputs:out"]
+    }
+
+    def Shader "IfGreaterOrEqual_4"
+    {
+        uniform token info:id = "ND_ifgreatereq_float"
+        float inputs:in1 = 1
+        float inputs:in2 = 0
+        float inputs:value1 = 1.3
+        float inputs:value1.connect = None
+        float inputs:value2 = 1
+        float inputs:value2.connect = </GridMaterial/Magnitude.outputs:out>
+        float outputs:out
+        float2 ui:nodegraph:node:pos = (-459.19583, 195.61533)
+        int ui:nodegraph:node:stackingOrder = 1542
+    }
+
+    def Shader "Abs"
+    {
+        uniform token info:id = "ND_absval_vector3"
+        float3 inputs:in.connect = </GridMaterial/Position.outputs:out>
+        float3 outputs:out
+        float2 ui:nodegraph:node:pos = (-1219.9014, 129.95638)
+        int ui:nodegraph:node:stackingOrder = 1522
+    }
+
+    def Shader "SmoothStep"
+    {
+        uniform token info:id = "ND_smoothstep_vector3FA"
+        float inputs:high.connect = </GridMaterial.inputs:LineWidth>
+        float3 inputs:in.connect = </GridMaterial/Modulo_3.outputs:out>
+        float inputs:low.connect = None
+        float3 outputs:out
+        float2 ui:nodegraph:node:pos = (-887.45184, 146.29703)
+        int ui:nodegraph:node:stackingOrder = 1522
+    }
+
+    def Shader "Modulo_3"
+    {
+        uniform token info:id = "ND_modulo_vector3FA"
+        float3 inputs:in1.connect = </GridMaterial/Abs.outputs:out>
+        float inputs:in2.connect = </GridMaterial.inputs:LineInterval>
+        float3 outputs:out
+        float2 ui:nodegraph:node:pos = (-1103.1642, 142.51123)
+        int ui:nodegraph:node:stackingOrder = 1522
+    }
+
+    def Shader "Magnitude"
+    {
+        uniform token info:id = "ND_magnitude_vector3"
+        float3 inputs:in.connect = </GridMaterial/SmoothStep.outputs:out>
+        float outputs:out
+        float2 ui:nodegraph:node:pos = (-667.6573, 200.73163)
+        int ui:nodegraph:node:stackingOrder = 1492
     }
 }
 
