@@ -76,15 +76,7 @@ struct ContentView: View {
             content.add(anchor)
             
             let _ = content.subscribe(to: SceneEvents.Update.self, on: nil, componentType: nil) { event in
-                if let motion = scene.findEntity(named: "Chassis")?.components[PhysicsMotionComponent.self] {
-                    var velocity = motion.linearVelocity
-                    velocity.x = fwd ? 0.5 : rev ? -0.5 : 0
-                    var angular = motion.angularVelocity
-                    angular.z = ccw ? 0.5 : cw ? -0.5 : 0
-                    scene.findEntity(named: "Chassis")?.components.set(
-                        PhysicsMotionComponent(linearVelocity: velocity, angularVelocity: angular)
-                    )
-                }
+                applyForces(in: scene)
             }
             
             requestReset = false
@@ -102,18 +94,18 @@ struct ContentView: View {
         
         // Create attachment pins on the chassis and wheels
         let lateral = simd_quatf(from: [1, 0, 0], to: [0, 1, 0])
-        let chassis = scene.findEntity(named: "Chassis")
-        let rearPin = chassis?.pins.set(
+        scene.chassis?.components.set(PhysicsMotionComponent())
+        let rearPin = scene.chassis?.pins.set(
             named: "rear",
             position: .init(-0.130752, 0, 0.0127),
             orientation: lateral
         )
-        let rightPin = chassis?.pins.set(
+        let rightPin = scene.chassis?.pins.set(
             named: "right",
             position: .init(-0.04645, -0.0555, 0.035),
             orientation: lateral
         )
-        let leftPin = chassis?.pins.set(
+        let leftPin = scene.chassis?.pins.set(
             named: "right",
             position: .init(-0.04645, 0.0555, 0.035),
             orientation: lateral
@@ -127,7 +119,7 @@ struct ContentView: View {
         )
         
         if let rearPin, let rearWheelPin {
-            let rearJoint = PhysicsFixedJoint(pin0: rearPin, pin1: rearWheelPin)
+            let rearJoint = PhysicsSphericalJoint(pin0: rearPin, pin1: rearWheelPin)
             do {
                 try rearJoint.addToSimulation()
             } catch {
@@ -135,23 +127,12 @@ struct ContentView: View {
             }
         }
          
-        let rightWheelPin = scene.rightWheel?.pins.set(
-            named: "rightWheel",
-            position: .init(0, 0, 0),
-            orientation: simd_quatf(from: [1, 0, 0], to: [0, 0, -1])
-        )
+        let rightWheelPin = scene.rightWheel?.setupWheelPin(named: "rightWheel", zDirection: -1)
+        let leftWheelPin = scene.leftWheel?.setupWheelPin(named: "leftWheel", zDirection: 1)
 
-        let leftWheelPin = scene.leftWheel?.pins.set(
-            named: "leftWheel",
-            position: .init(0, 0, 0),
-            orientation: simd_quatf(from: [1, 0, 0], to: [0, 0, 1])
-        )
-        
         addRevoluteJoint(between: rightPin, and: rightWheelPin)
         addRevoluteJoint(between: leftPin, and: leftWheelPin)
-        
-        //let physics = chassis?.components[PhysicsBodyComponent.self]
-        //print("roots: \(root), physics: \(physics?.massProperties)")
+
     }
     
     /// The control overlay for forward, reverse, counter-clockwise, and clockwise motion
@@ -217,6 +198,19 @@ struct ContentView: View {
         } else {
             print("addRevoluteJoint: Received null: \(pin0) \(pin1)")
         }
+    }
+    
+    func applyForces(in scene: Entity) {
+        guard let chassis = scene.chassis, let chassisMotion = chassis.components[PhysicsMotionComponent.self],
+              let rightWheel = scene.rightWheel, let rightMotion = scene.rightWheel?.components[PhysicsMotionComponent.self] else {
+            return
+        }
+
+        let rightForce = 0.1 * Float(fwd || ccw ? 1 : rev || cw ? -1 : 0)
+        let leftForce = 0.1 * Float(fwd || cw ? 1 : rev || ccw ? -1 : 0)
+
+        scene.chassis?.addForce(.init(rightForce, 0, 0), at: .init(x: 0, y: -0.0555, z: 0.05), relativeTo: scene.chassis)
+        scene.chassis?.addForce(.init(leftForce, 0, 0), at: .init(x: 0, y: 0.0555, z: 0.05), relativeTo: scene.chassis)
     }
 }
 
