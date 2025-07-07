@@ -120,9 +120,9 @@ def Xform "Root"
 
                     def RealityKitStruct "material"
                     {
-                        double dynamicFriction = 0.7
+                        double dynamicFriction = 0.5
                         double restitution = 0.3
-                        double staticFriction = 0.7
+                        double staticFriction = 0.5
                     }
                 }
             }
@@ -167,9 +167,9 @@ def Xform "Root"
 
                     def RealityKitStruct "material"
                     {
-                        double dynamicFriction = 0.7
+                        double dynamicFriction = 0.5
                         double restitution = 0.3
-                        double staticFriction = 0.7
+                        double staticFriction = 0.5
                     }
                 }
             }
@@ -185,12 +185,12 @@ def Xform "Root"
                 uint group = 1
                 uniform token info:id = "RealityKit.Collider"
                 uint mask = 4294967295
-                token type = "Default"
+                token type = "Trigger"
 
                 def RealityKitStruct "Shape"
                 {
-                    float3 extent = (0.12, 0.02, 0.03)
-                    float radius = 0.01
+                    float3 extent = (0.1329545, 0.108380586, 0.06943668)
+                    float radius = 0.00001
                     token shapeType = "Box"
 
                     def RealityKitStruct "pose"
@@ -211,6 +211,7 @@ def Xform "Root"
                 def RealityKitStruct "massFrame"
                 {
                     float3 m_inertia = (0.0006528, 0.001428, 0.0019126)
+                    float m_mass = 0.5
 
                     def RealityKitStruct "m_pose"
                     {
@@ -243,13 +244,13 @@ def Xform "Root"
     )
     {
         uniform token axis = "Y"
-        double height = 0.05
+        double height = 0.1
         rel material:binding = </GridMaterial> (
             bindMaterialAs = "weakerThanDescendants"
         )
-        double radius = 1
+        double radius = 10
         quatf xformOp:orient = (0.70710677, 0.70710677, 0, 0)
-        float3 xformOp:translate = (0, 0, -0.025)
+        float3 xformOp:translate = (0, 0, -0.05)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
 
         def RealityKitComponent "Collider"
@@ -261,7 +262,7 @@ def Xform "Root"
 
             def RealityKitStruct "Shape"
             {
-                float3 extent = (2, 0.05, 2)
+                float3 extent = (20, 0.1, 20)
                 token shapeType = "Box"
 
                 def RealityKitStruct "pose"
@@ -357,7 +358,7 @@ def Xform "Root"
 
 def Material "GridMaterial"
 {
-    color3f inputs:GridColor = (0.55634254, 0.9793455, 0) (
+    color3f inputs:GridColor = (0.9995341, 0.9883556, 0.47265524) (
         colorSpace = "srgb_texture"
         customData = {
             dictionary realitykit = {
@@ -425,7 +426,7 @@ def Material "GridMaterial"
         string inputs:space = "world"
         float3 outputs:out
         float2 ui:nodegraph:node:pos = (-1379.0963, 131.63063)
-        int ui:nodegraph:node:stackingOrder = 1522
+        int ui:nodegraph:node:stackingOrder = 1547
         string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["outputs:out"]
     }
 

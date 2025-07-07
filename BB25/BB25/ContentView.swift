@@ -32,9 +32,19 @@ struct ContentView: View {
             case .spatialTracking: content.camera = .spatialTracking
             }
             
-            resetScene(in: content)
+            /*let session = SpatialTrackingSession()
+            let config = SpatialTrackingSession.Configuration(
+                tracking:[],
+                sceneUnderstanding:[
+                    //.occlusion,
+                    .physics,
+                    .collision,
+                    .shadow
+            ])
+            await session.run(config)*/
             
-
+            resetScene(in: content)
+        
         } update: { content in
             switch camera {
             case .virtual: content.camera = .virtual
@@ -44,7 +54,6 @@ struct ContentView: View {
             if requestReset {
                 resetScene(in: content)
             }
-            print("update... requestReset: \(requestReset), [\(fwd), \(rev), \(ccw), \(cw)]")
         }
         .realityViewCameraControls(.orbit)
         .overlay(alignment: .bottom) {
@@ -71,11 +80,13 @@ struct ContentView: View {
             }
                 
             scene.setParent(anchor)
+            scene.setScale(4 * .one, relativeTo: nil)
             setupPhysics(in: scene)
             
             content.add(anchor)
             
             let _ = content.subscribe(to: SceneEvents.Update.self, on: nil, componentType: nil) { event in
+                //correctWheelRotations(in: scene)
                 applyForces(in: scene)
             }
             
@@ -88,6 +99,7 @@ struct ContentView: View {
         // Make sure the physics entities have a common parent with simulation and joints components
         var simulation = PhysicsSimulationComponent()
         simulation.gravity = .init(0, 0, -9.80665)
+        simulation.solverIterations = .init(positionIterations: 32, velocityIterations: 4)
         let root = scene.findEntity(named: "Root")
         root?.components.set(simulation)
         root?.components.set(PhysicsJointsComponent())
@@ -102,12 +114,12 @@ struct ContentView: View {
         )
         let rightPin = scene.chassis?.pins.set(
             named: "right",
-            position: .init(-0.04645, -0.0555, 0.035),
+            position: rightWheelPosition,
             orientation: lateral
         )
         let leftPin = scene.chassis?.pins.set(
-            named: "right",
-            position: .init(-0.04645, 0.0555, 0.035),
+            named: "left",
+            position: leftWheelPosition,
             orientation: lateral
         )
         
@@ -158,6 +170,15 @@ struct ContentView: View {
             }
             .disabled(requestReset)
         }
+        #if os(iOS)
+        .overlay(alignment: .topLeading) {
+            Button("Camera") {
+                camera = camera == .spatialTracking ? .virtual : .spatialTracking
+                requestReset = true
+            }
+            .disabled(requestReset)
+        }
+        #endif
         .padding()
         .background {
             RoundedRectangle(cornerRadius: 12)
@@ -196,21 +217,49 @@ struct ContentView: View {
                 print("Failed to add right wheel revolute joint to simulation")
             }
         } else {
-            print("addRevoluteJoint: Received null: \(pin0) \(pin1)")
+            print("addRevoluteJoint: Received null: \(String(describing: pin0)) \(String(describing: pin1))")
         }
     }
     
+    func correctWheelRotations(in scene: Entity) {
+        guard let rightWheel = scene.rightWheel else { return }
+        let matrix = rightWheel.transformMatrix(relativeTo: scene.chassis)
+        let transform = Transform(matrix: matrix)
+        //scene.rightWheel?.transform = Transform(roll: angle)
+        //transform.rotation = simd_quatf(angle: transform.rotation.angle, axis: .init(x: 1, y: 0, z: 0))
+        //var rotation = rightWheel.convert(transform: transform, to: scene.chassis).rotation
+        let q = simd_quatf(angle: .pi / 2, axis: .init(1, 0, 0))
+        //transform.rotation = simd_mul(transform.rotation, q)
+        //transform.rotation = q
+        //scene.rightWheel?.transform = transform
+        
+        print("wheel transform: \n - original: \(transform.rotation.angle)\n - rotated: \(simd_mul(transform.rotation, q).angle)")
+    }
+    
     func applyForces(in scene: Entity) {
-        guard let chassis = scene.chassis, let chassisMotion = chassis.components[PhysicsMotionComponent.self],
-              let rightWheel = scene.rightWheel, let rightMotion = scene.rightWheel?.components[PhysicsMotionComponent.self] else {
-            return
-        }
 
-        let rightForce = 0.1 * Float(fwd || ccw ? 1 : rev || cw ? -1 : 0)
-        let leftForce = 0.1 * Float(fwd || cw ? 1 : rev || ccw ? -1 : 0)
+        let rightForce = Constants.forceGainFactor * Float(fwd || ccw ? 1 : rev || cw ? -1 : 0)
+        let leftForce = Constants.forceGainFactor * Float(fwd || cw ? 1 : rev || ccw ? -1 : 0)
 
-        scene.chassis?.addForce(.init(rightForce, 0, 0), at: .init(x: 0, y: -0.0555, z: 0.05), relativeTo: scene.chassis)
-        scene.chassis?.addForce(.init(leftForce, 0, 0), at: .init(x: 0, y: 0.0555, z: 0.05), relativeTo: scene.chassis)
+        scene.chassis?.addForce(.init(rightForce, 0, 0), at: rightWheelPosition, relativeTo: scene.chassis)
+        scene.chassis?.addForce(.init(leftForce, 0, 0), at: leftWheelPosition, relativeTo: scene.chassis)
+    }
+    
+    // MARK: - Constants
+    
+    private struct Constants {
+        static let wheelForwardOffset: Float = -0.04645
+        static let wheelLateralOffset: Float = 0.0555
+        static let wheelVerticalOffset: Float = 0.035
+        static let forceGainFactor: Float = 0.1
+    }
+    
+    private var rightWheelPosition: SIMD3<Float> {
+        .init(Constants.wheelForwardOffset, -Constants.wheelLateralOffset, Constants.wheelVerticalOffset)
+    }
+    
+    private var leftWheelPosition: SIMD3<Float> {
+        .init(Constants.wheelForwardOffset, Constants.wheelLateralOffset, Constants.wheelVerticalOffset)
     }
 }
 
