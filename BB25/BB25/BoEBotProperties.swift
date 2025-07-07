@@ -11,11 +11,13 @@ struct BoEBotProperties {
     static let wheelForwardOffset: Float = -0.04645
     static let wheelLateralOffset: Float = 0.0555
     static let wheelVerticalOffset: Float = 0.035
+    static let wheelThickness: Float = 0.5 // In centimeters, because the original export used scale=0.01 on the wheel when assembling withh the chassis
+    static let wheelRadius: Float = 3.5 // In centimeters, because the original export used scale=0.01 on the wheel when assembling withh the chassis
     static let forceGainFactor: Float = 0.1
     
     static let chassisCenter = SIMD3<Float>(x: -0.06, y: 0, z: 0.05)
     
-    static let chassisBoxDimensions = SIMD3<Float>(x: 0.12, y: 0.01, z: 0.05)
+    static let chassisBoxDimensions = SIMD3<Float>(x: 0.12, y: 0.1, z: 0.05)
     
     static let rightWheelPosition = SIMD3<Float>(wheelForwardOffset, -wheelLateralOffset, wheelVerticalOffset)
     

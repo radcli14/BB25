@@ -60,9 +60,6 @@ extension Entity {
         )
         
         chassis?.components.set(chassisCollisionComponent)
-        if let collision = chassis?.collision?.shapes.first {
-            print("chassis collision = \(collision.bounds)")
-        }
     }
     
     var chassisCollisionShape: ShapeResource {
@@ -108,10 +105,6 @@ extension Entity {
         
         rightWheel?.setupWheelCollision()
         leftWheel?.setupWheelCollision()
-
-        if let collision = rightWheel?.collision?.shapes.first {
-            print("rightWheel collision = \(collision.bounds)")
-        }
     }
     
     func setupWheelPin(named name: String, zDirection: Float) -> GeometricPin {
@@ -147,7 +140,7 @@ extension Entity {
     }
     
     var wheelCollisionMesh: MeshResource {
-        .generateCylinder(height: 0.5, radius: 3.5)
+        .generateCylinder(height: BoEBotProperties.wheelThickness, radius: BoEBotProperties.wheelRadius)  // In centimeters, because the original export used scale=0.01 on the wheel when assembling withh the chassis
     }
     
     var wheelCollisionShape: ShapeResource {
