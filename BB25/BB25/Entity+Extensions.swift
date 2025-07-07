@@ -29,7 +29,7 @@ extension Entity {
     func setupSimulationAndJoints() {
         var simulation = PhysicsSimulationComponent()
         simulation.gravity = .init(0, 0, -9.80665)
-        simulation.solverIterations = .init(positionIterations: 32, velocityIterations: 4)
+        simulation.solverIterations = .init(positionIterations: 128, velocityIterations: 4)
         root?.components.set(simulation)
         root?.components.set(PhysicsJointsComponent())
     }
@@ -40,12 +40,12 @@ extension Entity {
         findEntity(named: "Chassis") as? HasPhysicsBody
     }
     
-    /// Create attachment pins on the chassis
+    /// Create attachment pins on the chassis, and build its mass and collision properties
     func buildChassis() {
         chassis?.components.set(PhysicsMotionComponent())
         chassis?.pins.set(
             named: "rear",
-            position: .init(-0.130752, 0, 0.0127),
+            position: BoEBotProperties.rearWheelPosition,
             orientation: lateral
         )
         chassis?.pins.set(
@@ -58,6 +58,20 @@ extension Entity {
             position: BoEBotProperties.leftWheelPosition,
             orientation: lateral
         )
+        
+        chassis?.components.set(chassisCollisionComponent)
+        if let collision = chassis?.collision?.shapes.first {
+            print("chassis collision = \(collision.bounds)")
+        }
+    }
+    
+    var chassisCollisionShape: ShapeResource {
+        .generateBox(size: BoEBotProperties.chassisBoxDimensions)
+        .offsetBy(translation: BoEBotProperties.chassisCenter)
+    }
+    
+    var chassisCollisionComponent: CollisionComponent {
+        CollisionComponent(shapes: [chassisCollisionShape], mode: .colliding)
     }
     
     var rightPin: GeometricPin? {
@@ -91,6 +105,13 @@ extension Entity {
         let _ = rearWheel?.setupWheelPin(named: "rearWheel", zDirection: 1)
         let _ = rightWheel?.setupWheelPin(named: "rightWheel", zDirection: -1)
         let _ = leftWheel?.setupWheelPin(named: "leftWheel", zDirection: 1)
+        
+        rightWheel?.setupWheelCollision()
+        leftWheel?.setupWheelCollision()
+
+        if let collision = rightWheel?.collision?.shapes.first {
+            print("rightWheel collision = \(collision.bounds)")
+        }
     }
     
     func setupWheelPin(named name: String, zDirection: Float) -> GeometricPin {
@@ -101,6 +122,16 @@ extension Entity {
             orientation: simd_quatf(from: [1, 0, 0], to: [0, 0, zDirection])
         )
         return pin
+    }
+    
+    func setupWheelCollision() {
+        guard name.contains("Hub") else {
+            print("could not set up wheel collision on \(name)")
+            return
+        }
+        components[CollisionComponent.self] = nil
+        components.set(wheelCollisionComponent)
+        components[PhysicsBodyComponent.self] = PhysicsBodyComponent(shapes: [wheelCollisionShape], mass: 0.01, mode: .dynamic)
     }
     
     var rightWheelPin: GeometricPin? {
@@ -115,6 +146,18 @@ extension Entity {
         rearWheel?.pins.first(where: { $0.name == "rearWheel" })
     }
     
+    var wheelCollisionMesh: MeshResource {
+        .generateCylinder(height: 0.5, radius: 3.5)
+    }
+    
+    var wheelCollisionShape: ShapeResource {
+        .generateConvex(from: wheelCollisionMesh)
+        .offsetBy(rotation: .init(angle: .pi/2, axis: .init(1, 0, 0)))
+    }
+    
+    var wheelCollisionComponent: CollisionComponent {
+        CollisionComponent(shapes: [wheelCollisionShape], mode: .default)
+    }
     
     // MARK: - States
     
