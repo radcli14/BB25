@@ -54,6 +54,11 @@
 			path = URDF;
 			sourceTree = "<group>";
 		};
+		8A5C20A12E1BF4580042CD7F /* USDZ */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = USDZ;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -85,6 +90,7 @@
 		8A517C3E2E16BCC9000F4779 = {
 			isa = PBXGroup;
 			children = (
+				8A5C20A12E1BF4580042CD7F /* USDZ */,
 				8A5C1FF22E1AED780042CD7F /* URDF */,
 				8A517C492E16BCC9000F4779 /* BB25 */,
 				8A517C5A2E16BCCB000F4779 /* BB25Tests */,
@@ -121,6 +127,7 @@
 			fileSystemSynchronizedGroups = (
 				8A517C492E16BCC9000F4779 /* BB25 */,
 				8A5C1FF22E1AED780042CD7F /* URDF */,
+				8A5C20A12E1BF4580042CD7F /* USDZ */,
 			);
 			name = BB25;
 			packageProductDependencies = (
