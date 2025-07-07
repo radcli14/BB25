@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <?xml-model href="https://raw.githubusercontent.com/ros/urdfdom/master/xsd/urdf.xsd" ?>
-<robot name="BB25" xmlns="http://www.ros.org">
+<robot name="BB25" xmlns:xacro="http://www.ros.org/wiki/xacro">
     
     <material name="green">
         <color rgba="0.094 0.27 0.23 1"/>
@@ -79,7 +79,7 @@
         <collision>
             <origin xyz="0 0 0"/>
             <geometry>
-                <!-- <cylinder radius="0.035" length="0.005"/> -->
+                <!--cylinder radius="0.035" length="0.005"/-->
                 <mesh filename="wheel.stl"/>
             </geometry>
         </collision>
@@ -155,5 +155,28 @@
         <origin xyz="-0.130752 0 0.0127" />
         <axis xyz="0 1 0" />
     </joint>
+    
+    
+    <transmission name="left_wheel_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="left">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="left_wheel_motor">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+
+    <transmission name="right_wheel_trans">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="right">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="right_wheel_motor">
+        <hardwareInterface>EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
     
 </robot>

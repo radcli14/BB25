@@ -1,0 +1,54 @@
+<mujoco model="BB25">
+    <!-- Mobile robot converted from URDF to MJCF -->
+    <compiler angle="radian"/>
+    <option timestep="0.002"/>
+
+    <!-- Visual and collision assets -->
+    <asset>
+        <material name="green" rgba="0.094 0.27 0.23 1"/>
+        <material name="white" rgba="1 1 1 1"/>
+        <material name="orange" rgba="1 0.3 0.1 1"/>
+        <material name="blue" rgba="0.2 0.2 1 1"/>
+        <material name="black" rgba="0 0 0 1"/>
+
+        <mesh name="chassis" file="chassis.stl"/>
+        <mesh name="wheel" file="wheel.stl"/>
+    </asset>
+
+    <worldbody>
+        <!-- Flat ground plane -->
+        <geom name="ground" type="plane" size="5 5 0.1" material="green" contype="1" conaffinity="1"/>
+
+        <!-- Root robot body is the chassis; has a freejoint so it can move in 3‑D -->
+        <body name="chassis" pos="0 0 0.05">
+            <freejoint name="base_free"/>
+
+            <!-- Chassis geometry -->
+            <geom name="chassis_geom" type="mesh" mesh="chassis" material="white" mass="1.0"/>
+
+            <!-- Right wheel -->
+            <body name="right_wheel" pos="-0.04645 -0.0555 0.035" euler="-1.570796327 0 0">
+                <joint name="right" type="hinge" axis="0 0 1"/>
+                <geom name="right_wheel_geom" type="mesh" mesh="wheel" material="orange" mass="0.1"/>
+            </body>
+
+            <!-- Left wheel -->
+            <body name="left_wheel" pos="-0.04645 0.0555 0.035" euler="1.570796327 0 0">
+                <joint name="left" type="hinge" axis="0 0 1"/>
+                <geom name="left_wheel_geom" type="mesh" mesh="wheel" material="blue" mass="0.1"/>
+            </body>
+
+            <!-- Rear caster -->
+            <body name="rear_wheel" pos="-0.130752 0 0.0127">
+                <joint name="rear" type="hinge" axis="0 1 0"/>
+                <geom name="rear_wheel_geom" type="sphere" size="0.0127" material="black" mass="0.1" friction="0.1 0 0"/>
+            </body>
+        </body>
+    </worldbody>
+
+    <actuator>
+      <velocity name="left_motor" joint="left" gear="-0.1" kv="5" ctrllimited="true" ctrlrange="-1 1"/>
+      <velocity name="right_motor" joint="right" gear="0.1" kv="5" ctrllimited="true" ctrlrange="-1 1"/>
+    </actuator>
+
+</mujoco>
