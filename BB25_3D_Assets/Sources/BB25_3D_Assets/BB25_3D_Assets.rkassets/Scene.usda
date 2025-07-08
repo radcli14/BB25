@@ -215,7 +215,7 @@ def Xform "Root"
 
                     def RealityKitStruct "m_pose"
                     {
-                        float3 position = (-0.08, 0, 0.05)
+                        float3 position = (-0.06, 0, 0.05)
                     }
                 }
 
@@ -416,7 +416,7 @@ def Material "GridMaterial"
         float inputs:roughness = 1
         token outputs:out
         float2 ui:nodegraph:node:pos = (-225.80807, 289.92102)
-        int ui:nodegraph:node:stackingOrder = 1531
+        int ui:nodegraph:node:stackingOrder = 1549
         string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["Advanced"]
     }
 
