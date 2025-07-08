@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "BoEBotRender_wShield_icon.jpg",
+      "filename" : "bb25_icon_light.jpg",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -13,6 +13,7 @@
           "value" : "dark"
         }
       ],
+      "filename" : "bb25_icon_dark.jpg",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
