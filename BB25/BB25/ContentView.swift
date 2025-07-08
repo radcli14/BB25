@@ -20,6 +20,8 @@ struct ContentView: View {
     
     @State private var anchor: AnchorEntity?
     
+    @State private var controlState = JoyStick.ControlState()
+    
     var body: some View {
         RealityView { content in
             switch camera {
@@ -71,7 +73,7 @@ struct ContentView: View {
         }
         #endif
         .overlay(alignment: .bottom) {
-            controls
+            JoyStick(controlState: $controlState)
         }
         .ignoresSafeArea(.all)
     }
@@ -109,75 +111,6 @@ struct ContentView: View {
     
     // MARK: - Controls
     
-    struct ControlState {
-        var linear = 0.0  // Positive = forward
-        var angular = 0.0  // Positive = counterclockwise
-        
-        mutating func update(with value: DragGesture.Value, in geometry: GeometryProxy) {
-            linear = -2.0 * (value.translation.height) / geometry.size.height
-            angular = -2.0 * (value.translation.width) / geometry.size.width
-            print("\n\nlinear = \(linear)\nangular = \(angular)\ngeometry: \(geometry.size)\ntranslation = \(value.translation)")
-        }
-        
-        mutating func reset() {
-            linear = 0.0
-            angular = 0.0
-        }
-        
-        var isActive: Bool {
-            angular != 0 || linear != 0
-        }
-        
-        var rightForce: Float {
-            BoEBotProperties.forceGainFactor * Float(linear + angular)
-        }
-        
-        var leftForce: Float {
-            BoEBotProperties.forceGainFactor * Float(linear - angular)
-        }
-    }
-    @State var controlState = ControlState()
-
-    /// The control overlay for forward, reverse, counter-clockwise, and clockwise motion
-    var controls: some View {
-        ZStack {
-            VStack(spacing: 64) {
-                Image(systemName: "arrow.up")
-                Image(systemName: "arrow.down")
-            }
-            HStack(spacing: 64) {
-                Image(systemName: "arrow.counterclockwise")
-                Image(systemName: "arrow.clockwise")
-            }
-        }
-        .font(.largeTitle)
-        .padding()
-        .background {
-            GeometryReader { geometry in
-                ZStack {
-                    RoundedRectangle(cornerRadius: 44)
-                        .fill(.ultraThinMaterial)
-                    Circle()
-                        .fill(.secondary)
-                        .frame(width: 44, height: 44)
-                        .offset(
-                            x: -0.5 * controlState.angular * geometry.size.width,
-                            y: -0.5 * controlState.linear * geometry.size.height
-                        )
-                }
-                .gesture(controlDragGesture(in: geometry))
-            }
-        }
-        .padding()
-        .padding(.bottom)
-    }
-    
-    func controlDragGesture(in geometry: GeometryProxy)-> some Gesture {
-        DragGesture()
-            .onChanged { dragValue in controlState.update(with: dragValue, in: geometry) }
-            .onEnded { _ in controlState.reset() }
-    }
-
     func applyForces(in scene: Entity) {
         if controlState.isActive {
             scene.chassis?.addForce(.init(controlState.rightForce, 0, 0), at: BoEBotProperties.rightWheelPosition, relativeTo: scene.chassis)
