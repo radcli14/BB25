@@ -13,41 +13,43 @@ struct JoyStick: View {
     
     var body: some View {
         ZStack {
-            VStack(spacing: 64) {
+            VStack {
                 Image(systemName: "arrow.up")
+                    .foregroundColor(.secondary.mix(with: .green, by: max(0, controlState.linear)))
+                Spacer()
                 Image(systemName: "arrow.down")
+                    .foregroundColor(.secondary.mix(with: .green, by: max(0, -controlState.linear)))
             }
-            HStack(spacing: 64) {
+            HStack {
                 Image(systemName: "arrow.counterclockwise")
+                    .foregroundColor(.secondary.mix(with: .green, by: max(0, controlState.angular)))
+                Spacer()
                 Image(systemName: "arrow.clockwise")
+                    .foregroundColor(.secondary.mix(with: .green, by: max(0, -controlState.angular)))
             }
+            Circle()
+                .fill(.ultraThinMaterial)
+                .shadow(color: .secondary, radius: 4)
+                .frame(width: Constants.stickRadius, height: Constants.stickRadius)
+                .offset(
+                    x: -0.5 * controlState.angular * Constants.padSize,
+                    y: -0.5 * controlState.linear * Constants.padSize
+                )
         }
-        .font(.largeTitle)
+        .font(.largeTitle.weight(.black))
+        .gesture(controlDragGesture)
+        .frame(width: Constants.padSize, height: Constants.padSize)
         .padding()
-        .background {
-            GeometryReader { geometry in
-                ZStack {
-                    RoundedRectangle(cornerRadius: 44)
-                        .fill(.ultraThinMaterial)
-                    Circle()
-                        .fill(.ultraThinMaterial)
-                        .shadow(color: .secondary, radius: 4)
-                        .frame(width: 44, height: 44)
-                        .offset(
-                            x: -0.5 * controlState.angular * geometry.size.width,
-                            y: -0.5 * controlState.linear * geometry.size.height
-                        )
-                }
-                .gesture(controlDragGesture(in: geometry))
-            }
-        }
+        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: Constants.stickRadius))
         .padding()
         .padding(.bottom)
     }
     
-    func controlDragGesture(in geometry: GeometryProxy)-> some Gesture {
+    var controlDragGesture: some Gesture {
         DragGesture(minimumDistance: 0)
-            .onChanged { dragValue in controlState.update(with: dragValue, in: geometry) }
+            .onChanged { dragValue in
+                controlState.update(with: dragValue, relativeTo: Constants.padSize)
+            }
             .onEnded { _ in controlState.reset() }
     }
     
@@ -55,10 +57,9 @@ struct JoyStick: View {
         var linear = 0.0  // Positive = forward
         var angular = 0.0  // Positive = counterclockwise
         
-        mutating func update(with value: DragGesture.Value, in geometry: GeometryProxy) {
-            linear = state(for: value.location.y, in: geometry.size.height)
-            angular = state(for: value.location.x, in: geometry.size.width)
-            print("\n\nlinear = \(linear)\nangular = \(angular)\ngeometry: \(geometry.size)\ntranslation = \(value.translation)")
+        mutating func update(with value: DragGesture.Value, relativeTo padSize: Double) {
+            linear = state(for: value.location.y, in: padSize)
+            angular = state(for: value.location.x, in: padSize)
         }
         
         private func state(for location: Double, in dimension: Double) -> Double {
@@ -81,6 +82,11 @@ struct JoyStick: View {
         var leftForce: Float {
             BoEBotProperties.forceGainFactor * Float(linear - angular)
         }
+    }
+    
+    private struct Constants {
+        static let padSize: CGFloat = 172
+        static let stickRadius: CGFloat = 44
     }
 }
 
