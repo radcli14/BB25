@@ -12,7 +12,7 @@ struct BB25App: App {
     var body: some Scene {
         WindowGroup {
             NavigationStack {
-                ContentView()
+                BB25RealityView()
             }
         }
     }
