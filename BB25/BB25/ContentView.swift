@@ -16,11 +16,6 @@ struct ContentView: View {
     }
     @State var camera: CameraType = .virtual
     
-    @State var fwd = false
-    @State var rev = false
-    @State var ccw = false
-    @State var cw = false
-    
     @State var requestReset = false
     
     @State private var anchor: AnchorEntity?
@@ -46,16 +41,35 @@ struct ContentView: View {
             resetScene(in: content)
         
         } update: { content in
-            switch camera {
-            case .virtual: content.camera = .virtual
-            case .spatialTracking: content.camera = .spatialTracking
-            }
-            
             if requestReset {
+                switch camera {
+                case .virtual: content.camera = .virtual
+                case .spatialTracking: content.camera = .spatialTracking
+                }
                 resetScene(in: content)
             }
         }
         .realityViewCameraControls(.orbit)
+        .navigationTitle("BB25")
+        .toolbar {
+            ToolbarItem {
+                Button("Reset", systemImage: "arrow.counterclockwise") {
+                    requestReset = true
+                }
+                .disabled(requestReset)
+            }
+        }
+        #if os(iOS)
+        .toolbar {
+            ToolbarItem {
+                Button("Camera", systemImage: "camera") {
+                    camera = camera == .spatialTracking ? .virtual : .spatialTracking
+                    requestReset = true
+                }
+                .disabled(requestReset)
+            }
+        }
+        #endif
         .overlay(alignment: .bottom) {
             controls
         }
@@ -86,101 +100,95 @@ struct ContentView: View {
             content.add(anchor)
             
             let _ = content.subscribe(to: SceneEvents.Update.self, on: nil, componentType: nil) { event in
-                //correctWheelRotations(in: scene)
                 applyForces(in: scene)
             }
             
             requestReset = false
         }
     }
+    
+    // MARK: - Controls
+    
+    struct ControlState {
+        var linear = 0.0  // Positive = forward
+        var angular = 0.0  // Positive = counterclockwise
+        
+        mutating func update(with value: DragGesture.Value, in geometry: GeometryProxy) {
+            linear = -2.0 * (value.translation.height) / geometry.size.height
+            angular = -2.0 * (value.translation.width) / geometry.size.width
+            print("\n\nlinear = \(linear)\nangular = \(angular)\ngeometry: \(geometry.size)\ntranslation = \(value.translation)")
+        }
+        
+        mutating func reset() {
+            linear = 0.0
+            angular = 0.0
+        }
+        
+        var isActive: Bool {
+            angular != 0 || linear != 0
+        }
+        
+        var rightForce: Float {
+            BoEBotProperties.forceGainFactor * Float(linear + angular)
+        }
+        
+        var leftForce: Float {
+            BoEBotProperties.forceGainFactor * Float(linear - angular)
+        }
+    }
+    @State var controlState = ControlState()
 
     /// The control overlay for forward, reverse, counter-clockwise, and clockwise motion
     var controls: some View {
-        VStack(spacing: 12) {
-            Text("BB25")
-                .font(.title.weight(.black))
-            ZStack {
-                VStack(spacing: 36) {
-                    heldButton("FWD", systemImage: "arrow.up", isHeld: $fwd)
-                    heldButton("REV", systemImage: "arrow.down", isHeld: $rev)
-                }
-                HStack {
-                    heldButton("CCW", systemImage: "arrow.counterclockwise", isHeld: $ccw)
-                    Spacer()
-                    heldButton("CW   ", systemImage: "arrow.clockwise", isHeld: $cw)
-                }
+        ZStack {
+            VStack(spacing: 64) {
+                Image(systemName: "arrow.up")
+                Image(systemName: "arrow.down")
+            }
+            HStack(spacing: 64) {
+                Image(systemName: "arrow.counterclockwise")
+                Image(systemName: "arrow.clockwise")
             }
         }
-        .overlay(alignment: .topTrailing) {
-            Button("Reset") {
-                requestReset = true
-            }
-            .disabled(requestReset)
-        }
-        #if os(iOS)
-        .overlay(alignment: .topLeading) {
-            Button("Camera") {
-                camera = camera == .spatialTracking ? .virtual : .spatialTracking
-                requestReset = true
-            }
-            .disabled(requestReset)
-        }
-        #endif
+        .font(.largeTitle)
         .padding()
         .background {
-            RoundedRectangle(cornerRadius: 12)
-                .fill(.ultraThinMaterial)
+            GeometryReader { geometry in
+                ZStack {
+                    RoundedRectangle(cornerRadius: 44)
+                        .fill(.ultraThinMaterial)
+                    Circle()
+                        .fill(.secondary)
+                        .frame(width: 44, height: 44)
+                        .offset(
+                            x: -0.5 * controlState.angular * geometry.size.width,
+                            y: -0.5 * controlState.linear * geometry.size.height
+                        )
+                }
+                .gesture(controlDragGesture(in: geometry))
+            }
         }
         .padding()
         .padding(.bottom)
     }
     
-    /// A button that activates a `isHeld` boolean on long press, that uses a conventional `title` and `systemImage` to form a label
-    func heldButton(_ title: String, systemImage: String, isHeld: Binding<Bool>) -> some View {
-        Label(title, systemImage: systemImage)
-            .foregroundColor(isHeld.wrappedValue ? .red : .blue)
-            .fontWeight(isHeld.wrappedValue ? .black : .semibold)
-            .padding()
-            .background {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(.ultraThinMaterial)
-            }
-            .onLongPressGesture(
-                minimumDuration: 0.01) {
-                    
-                } onPressingChanged: { isPressed in
-                    withAnimation {
-                        isHeld.wrappedValue = isPressed
-                    }
-                }
+    func controlDragGesture(in geometry: GeometryProxy)-> some Gesture {
+        DragGesture()
+            .onChanged { dragValue in controlState.update(with: dragValue, in: geometry) }
+            .onEnded { _ in controlState.reset() }
     }
-    
-    func correctWheelRotations(in scene: Entity) {
-        guard let rightWheel = scene.rightWheel else { return }
-        let matrix = rightWheel.transformMatrix(relativeTo: scene.chassis)
-        let transform = Transform(matrix: matrix)
-        //scene.rightWheel?.transform = Transform(roll: angle)
-        //transform.rotation = simd_quatf(angle: transform.rotation.angle, axis: .init(x: 1, y: 0, z: 0))
-        //var rotation = rightWheel.convert(transform: transform, to: scene.chassis).rotation
-        let q = simd_quatf(angle: .pi / 2, axis: .init(1, 0, 0))
-        //transform.rotation = simd_mul(transform.rotation, q)
-        //transform.rotation = q
-        //scene.rightWheel?.transform = transform
-        
-        print("wheel transform: \n - original: \(transform.rotation.angle)\n - rotated: \(simd_mul(transform.rotation, q).angle)")
-    }
-    
+
     func applyForces(in scene: Entity) {
-
-        let rightForce = BoEBotProperties.forceGainFactor * Float(fwd || ccw ? 1 : rev || cw ? -1 : 0)
-        let leftForce = BoEBotProperties.forceGainFactor * Float(fwd || cw ? 1 : rev || ccw ? -1 : 0)
-
-        scene.chassis?.addForce(.init(rightForce, 0, 0), at: BoEBotProperties.rightWheelPosition, relativeTo: scene.chassis)
-        scene.chassis?.addForce(.init(leftForce, 0, 0), at: BoEBotProperties.leftWheelPosition, relativeTo: scene.chassis)
+        if controlState.isActive {
+            scene.chassis?.addForce(.init(controlState.rightForce, 0, 0), at: BoEBotProperties.rightWheelPosition, relativeTo: scene.chassis)
+            scene.chassis?.addForce(.init(controlState.leftForce, 0, 0), at: BoEBotProperties.leftWheelPosition, relativeTo: scene.chassis)
+        }
     }
     
 }
 
 #Preview {
-    ContentView(camera: .virtual)
+    NavigationStack {
+        ContentView(camera: .virtual)
+    }
 }
