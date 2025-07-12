@@ -47,8 +47,8 @@
     </worldbody>
 
     <actuator>
-      <velocity name="left_motor" joint="left" gear="-0.1" kv="5" ctrllimited="true" ctrlrange="-1 1"/>
       <velocity name="right_motor" joint="right" gear="0.1" kv="5" ctrllimited="true" ctrlrange="-1 1"/>
+      <velocity name="left_motor" joint="left" gear="-0.1" kv="5" ctrllimited="true" ctrlrange="-1 1"/>
     </actuator>
 
 </mujoco>

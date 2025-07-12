@@ -30,9 +30,17 @@ extension BB25RealityView {
         var model: MjModel?
         var data: MjData?
         
+        // Real-time tracking for MuJoCo simulation
+        private var lastRealTime: CFAbsoluteTime = 0
+        private var simulationStartTime: Double = 0
+        private var realTimeStart: CFAbsoluteTime = 0
+        
         init() {
             model = loadMuJoCoModel()
             data = model?.makeData()
+            lastRealTime = CFAbsoluteTimeGetCurrent()
+            realTimeStart = lastRealTime
+            simulationStartTime = 0
         }
     }
 }
@@ -109,12 +117,10 @@ extension BB25RealityView.ViewModel {
                 anchor?.chassis?.addForce(.init(controlState.leftForce, 0, 0), at: BoEBotProperties.leftWheelPosition, relativeTo: anchor?.chassis)
             }
         case .mujoCo:
-            // Apply control inputs to MuJoCo simulation
-            if controlState.isActive {
-                let rightControl = Double(controlState.rightForce)
-                let leftControl = Double(controlState.leftForce)
-                applyControlInputs(controls: [rightControl, leftControl])
-            }
+            // TODO: note, I'm applying the .pi scale factor here to speed it up a bit, but thats somewhat of a placeholder
+            let rightControl = .pi * Double(controlState.rightForce)
+            let leftControl = .pi * Double(controlState.leftForce)
+            applyControlInputs(controls: [rightControl, leftControl])
         }
     }
     
@@ -147,10 +153,29 @@ extension BB25RealityView.ViewModel {
         anchor?.rearWheel?.setOrientation(rearWheelRotation ?? .init(), relativeTo: anchor?.chassis)
     }
     
-    /// Steps the MuJoCo simulation
+    /// Steps the MuJoCo simulation to match real time
     func stepSimulation() {
         guard let model = model, var data = data else { return }
-        model.step(data: &data)
+        
+        let currentRealTime = CFAbsoluteTimeGetCurrent()
+
+        // Initialize simulation start time on first call
+        if simulationStartTime == 0 {
+            simulationStartTime = data.time
+        }
+        
+        // Calculate target simulation time based on total real time elapsed since simulation start
+        let totalRealTimeElapsed = currentRealTime - realTimeStart
+        let targetSimulationTime = simulationStartTime + totalRealTimeElapsed
+        
+        // Step simulation until we reach or exceed the target time
+        var stepCount = 0
+        while data.time < targetSimulationTime {
+            model.step(data: &data)
+            stepCount += 1
+        }
+
+        lastRealTime = currentRealTime
     }
     
     var currentTime: Double? {
@@ -231,6 +256,12 @@ extension BB25RealityView.ViewModel {
         guard let model, var data else { return }
         
         model.reset(data: &data)
+        
+        // Reset real-time tracking
+        lastRealTime = CFAbsoluteTimeGetCurrent()
+        realTimeStart = lastRealTime
+        simulationStartTime = 0
+        
         print("Simulation reset to initial conditions")
     }
 }
