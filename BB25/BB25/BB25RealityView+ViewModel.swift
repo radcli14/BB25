@@ -28,8 +28,10 @@ extension BB25RealityView {
         init() {
             model = loadMuJoCoModel()
             data = model?.makeData()
-            guard let model, let data else { return }
-            mj_step(model, data)
+            stepSimulation()
+            //guard let model, let data else { return }
+            //print("data: \(data?.time) \(data?.qpos)")
+            //mj_step(model: model, data: data)
         }
     }
 }
@@ -96,5 +98,66 @@ extension BB25RealityView.ViewModel {
             anchor?.chassis?.addForce(.init(controlState.rightForce, 0, 0), at: BoEBotProperties.rightWheelPosition, relativeTo: anchor?.chassis)
             anchor?.chassis?.addForce(.init(controlState.leftForce, 0, 0), at: BoEBotProperties.leftWheelPosition, relativeTo: anchor?.chassis)
         }
+    }
+    
+    /// Steps the MuJoCo simulation and returns the current generalized coordinates
+    func stepSimulation() -> [Double]? {
+        guard let model = model, var data = data else {
+            print("stepSimulation: Model or data not available")
+            return nil
+        }
+        model.step(data: &data)
+        return currentCoordinates
+    }
+    
+    /// Reads the current generalized coordinates without stepping the simulation
+    var currentCoordinates: [Double]? {
+        guard let data else { return nil }
+        let qpos = data.qpos.asDoubleArray
+        print("Current time: \(data.time), qpos: \(qpos)")
+        return qpos
+    }
+    
+    /// Reads the current generalized velocities (qvel)
+    func getCurrentVelocities() -> [Double]? {
+        guard let data else { return nil }
+        let qvel = data.qvel.asDoubleArray
+        print("Current time: \(data.time), qvel: \(qvel)")
+        return qvel
+    }
+    
+    /// Applies control inputs to the simulation
+    func applyControlInputs(controls: [Double]) {
+        guard var data, controls.count == data.ctrl.count else {
+            print("applyControlInputs: Invalid control input size")
+            return
+        }
+        
+        // Apply control inputs to the simulation
+        for (index, control) in controls.enumerated() {
+            data.ctrl[index] = control
+        }
+    }
+    
+    /// Resets the simulation to initial conditions
+    func resetSimulation() {
+        guard let model = model, var data = data else {
+            print("resetSimulation: Model or data not available")
+            return
+        }
+        
+        model.reset(data: &data)
+        print("Simulation reset to initial conditions")
+    }
+}
+
+extension MjArray<Double> {
+    var indices: Range<Int> {
+        0..<count
+    }
+    
+    /// Convert MjArray<Double> to Swift Array<Double>
+    var asDoubleArray: [Double] {
+        return indices.map { self[$0] }
     }
 }
