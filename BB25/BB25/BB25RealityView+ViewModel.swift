@@ -28,10 +28,9 @@ extension BB25RealityView {
         init() {
             model = loadMuJoCoModel()
             data = model?.makeData()
+            printCurrentState()
             stepSimulation()
-            //guard let model, let data else { return }
-            //print("data: \(data?.time) \(data?.qpos)")
-            //mj_step(model: model, data: data)
+            printCurrentState()
         }
     }
 }
@@ -100,30 +99,30 @@ extension BB25RealityView.ViewModel {
         }
     }
     
-    /// Steps the MuJoCo simulation and returns the current generalized coordinates
-    func stepSimulation() -> [Double]? {
-        guard let model = model, var data = data else {
-            print("stepSimulation: Model or data not available")
-            return nil
-        }
+    /// Steps the MuJoCo simulation
+    func stepSimulation() {
+        guard let model = model, var data = data else { return }
         model.step(data: &data)
-        return currentCoordinates
+    }
+    
+    var currentTime: Double? {
+        data?.time
     }
     
     /// Reads the current generalized coordinates without stepping the simulation
     var currentCoordinates: [Double]? {
         guard let data else { return nil }
-        let qpos = data.qpos.asDoubleArray
-        print("Current time: \(data.time), qpos: \(qpos)")
-        return qpos
+        return data.qpos.asDoubleArray
     }
     
     /// Reads the current generalized velocities (qvel)
-    func getCurrentVelocities() -> [Double]? {
+    var currentVelocities: [Double]? {
         guard let data else { return nil }
-        let qvel = data.qvel.asDoubleArray
-        print("Current time: \(data.time), qvel: \(qvel)")
-        return qvel
+        return data.qvel.asDoubleArray
+    }
+    
+    func printCurrentState() {
+        print("\nSTATES\n - Current time: \(currentTime ?? 0)\n - qpos: \(currentCoordinates ?? [])\n - qvel: \(currentVelocities ?? [])")
     }
     
     /// Applies control inputs to the simulation
@@ -141,10 +140,7 @@ extension BB25RealityView.ViewModel {
     
     /// Resets the simulation to initial conditions
     func resetSimulation() {
-        guard let model = model, var data = data else {
-            print("resetSimulation: Model or data not available")
-            return
-        }
+        guard let model, var data else { return }
         
         model.reset(data: &data)
         print("Simulation reset to initial conditions")
