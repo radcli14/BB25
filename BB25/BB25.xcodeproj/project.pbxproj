@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		8A517C762E16C614000F4779 /* BB25_3D_Assets in Frameworks */ = {isa = PBXBuildFile; productRef = 8A517C752E16C614000F4779 /* BB25_3D_Assets */; };
+		8AE95FA72E1D73550003C39A /* MuJoCo in Frameworks */ = {isa = PBXBuildFile; productRef = 8AE95FA62E1D73550003C39A /* MuJoCo */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -67,6 +68,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8A517C762E16C614000F4779 /* BB25_3D_Assets in Frameworks */,
+				8AE95FA72E1D73550003C39A /* MuJoCo in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -132,6 +134,7 @@
 			name = BB25;
 			packageProductDependencies = (
 				8A517C752E16C614000F4779 /* BB25_3D_Assets */,
+				8AE95FA62E1D73550003C39A /* MuJoCo */,
 			);
 			productName = BB25;
 			productReference = 8A517C472E16BCC9000F4779 /* BB25.app */;
@@ -217,6 +220,7 @@
 			minimizedProjectReferenceProxies = 1;
 			packageReferences = (
 				8A517C742E16C614000F4779 /* XCLocalSwiftPackageReference "../BB25_3D_Assets" */,
+				8AE95FA52E1D73550003C39A /* XCLocalSwiftPackageReference "../swift-mujoco" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8A517C482E16BCC9000F4779 /* Products */;
@@ -589,12 +593,20 @@
 			isa = XCLocalSwiftPackageReference;
 			relativePath = ../BB25_3D_Assets;
 		};
+		8AE95FA52E1D73550003C39A /* XCLocalSwiftPackageReference "../swift-mujoco" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../swift-mujoco";
+		};
 /* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		8A517C752E16C614000F4779 /* BB25_3D_Assets */ = {
 			isa = XCSwiftPackageProductDependency;
 			productName = BB25_3D_Assets;
+		};
+		8AE95FA62E1D73550003C39A /* MuJoCo */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = MuJoCo;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

@@ -8,6 +8,7 @@
 import Foundation
 import RealityKit
 import BB25_3D_Assets
+import MuJoCo
 
 extension BB25RealityView {
     enum CameraType {
@@ -20,10 +21,35 @@ extension BB25RealityView {
         var requestReset = false
         var anchor: AnchorEntity?
         var controlState = JoyStick.ControlState()
+        
+        var model: MjModel?
+        var data: MjData?
+        
+        init() {
+            model = loadMuJoCoModel()
+            data = model?.makeData()
+            guard let model, let data else { return }
+            mj_step(model, data)
+        }
     }
 }
 
 extension BB25RealityView.ViewModel {
+    func loadMuJoCoModel(named modelName: String = "bb25_mujoco", ofType fileType: String = "xml") -> MjModel? {
+        if let filepath = Bundle.main.path(forResource: modelName, ofType: fileType) {
+            do {
+                model = try MjModel(fromXMLPath: filepath)
+                print("loadMuJoCoModel:\n\(String(describing: model?.name))")
+                return model
+            } catch {
+                print("loadMuJoCoModel: Could not load \(modelName) because: \(error)")
+            }
+        } else {
+            print("loadMuJoCoModel: \(modelName) was not found")
+        }
+        return nil
+    }
+    
     func resetButtonAction() {
         requestReset = true
     }

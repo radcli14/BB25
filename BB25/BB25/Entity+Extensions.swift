@@ -139,12 +139,8 @@ extension Entity {
         rearWheel?.pins.first(where: { $0.name == "rearWheel" })
     }
     
-    var wheelCollisionMesh: MeshResource {
-        .generateCylinder(height: BoEBotProperties.wheelThickness, radius: BoEBotProperties.wheelRadius)  // In centimeters, because the original export used scale=0.01 on the wheel when assembling withh the chassis
-    }
-    
     var wheelCollisionShape: ShapeResource {
-        .generateConvex(from: wheelCollisionMesh)
+        .generateCylinder(height: BoEBotProperties.wheelThickness, radius: BoEBotProperties.wheelRadius)  // In centimeters, because the original export used scale=0.01 on the wheel when assembling withh the chassis
         .offsetBy(rotation: .init(angle: .pi/2, axis: .init(1, 0, 0)))
     }
     
@@ -201,5 +197,12 @@ extension Entity {
         } else {
             print("addRevoluteJoint: Received null: \(String(describing: pin0)) \(String(describing: pin1))")
         }
+    }
+}
+
+extension ShapeResource {
+    static func generateCylinder(height: Float, radius: Float) -> ShapeResource {
+        let mesh = MeshResource.generateCylinder(height: height, radius: radius)
+        return .generateConvex(from: mesh)
     }
 }
