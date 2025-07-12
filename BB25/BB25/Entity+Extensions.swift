@@ -25,6 +25,18 @@ extension Entity {
         buildJoints()
     }
     
+    /// Set up physics for MuJoCo simulation mode - uses kinematic bodies instead of dynamic
+    func setupMuJoCoPhysics() {
+        //setupSimulationAndJoints()
+        //buildChassisForMuJoCo()
+        //buildWheelsForMuJoCo()
+        //buildJoints()
+        chassis?.physicsBody?.mode = .kinematic
+        rightWheel?.physicsBody?.mode = .kinematic
+        leftWheel?.physicsBody?.mode = .kinematic
+        rearWheel?.physicsBody?.mode = .kinematic
+    }
+    
     /// Make sure the physics entities have a common parent with simulation and joints components
     func setupSimulationAndJoints() {
         var simulation = PhysicsSimulationComponent()
@@ -60,6 +72,29 @@ extension Entity {
         )
         
         chassis?.components.set(chassisCollisionComponent)
+    }
+    
+    /// Create attachment pins on the chassis for MuJoCo mode - uses kinematic physics
+    func buildChassisForMuJoCo() {
+        chassis?.components.set(PhysicsMotionComponent())
+        chassis?.pins.set(
+            named: "rear",
+            position: BoEBotProperties.rearWheelPosition,
+            orientation: lateral
+        )
+        chassis?.pins.set(
+            named: "right",
+            position: BoEBotProperties.rightWheelPosition,
+            orientation: lateral
+        )
+        chassis?.pins.set(
+            named: "left",
+            position: BoEBotProperties.leftWheelPosition,
+            orientation: lateral
+        )
+        
+        // Use kinematic mode for MuJoCo physics
+        chassis?.components.set(PhysicsBodyComponent(shapes: [chassisCollisionShape], mass: 0.01, mode: .kinematic))
     }
     
     var chassisCollisionShape: ShapeResource {
@@ -107,6 +142,17 @@ extension Entity {
         leftWheel?.setupWheelCollision()
     }
     
+    /// Create attachment pins on the wheels for MuJoCo mode - uses kinematic physics
+    func buildWheelsForMuJoCo() {
+        let _ = rearWheel?.setupWheelPin(named: "rearWheel", zDirection: 1)
+        let _ = rightWheel?.setupWheelPin(named: "rightWheel", zDirection: -1)
+        let _ = leftWheel?.setupWheelPin(named: "leftWheel", zDirection: 1)
+        
+        rightWheel?.setupWheelCollisionForMuJoCo()
+        leftWheel?.setupWheelCollisionForMuJoCo()
+        rearWheel?.setupWheelCollisionForMuJoCo()
+    }
+    
     func setupWheelPin(named name: String, zDirection: Float) -> GeometricPin {
         components.set(PhysicsMotionComponent())
         let pin = pins.set(
@@ -125,6 +171,16 @@ extension Entity {
         components[CollisionComponent.self] = nil
         components.set(wheelCollisionComponent)
         components[PhysicsBodyComponent.self] = PhysicsBodyComponent(shapes: [wheelCollisionShape], mass: 0.01, mode: .dynamic)
+    }
+    
+    func setupWheelCollisionForMuJoCo() {
+        guard name.contains("Hub") || name.contains("RearWheel") else {
+            print("could not set up wheel collision on \(name)")
+            return
+        }
+        components[CollisionComponent.self] = nil
+        components.set(wheelCollisionComponent)
+        components[PhysicsBodyComponent.self] = PhysicsBodyComponent(shapes: [wheelCollisionShape], mass: 0.01, mode: .kinematic)
     }
     
     var rightWheelPin: GeometricPin? {

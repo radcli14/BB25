@@ -25,6 +25,7 @@ struct BB25RealityView: View {
             
             let _ = content.subscribe(to: SceneEvents.Update.self, on: nil, componentType: nil) { event in
                 viewModel.applyForces() // Sets the forces at each frame update
+                viewModel.updatePhysics() // Updates physics simulation based on selected mode
             }
         
         } update: { content in

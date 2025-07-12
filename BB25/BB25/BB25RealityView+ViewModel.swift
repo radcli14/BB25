@@ -15,6 +15,10 @@ extension BB25RealityView {
         case virtual, spatialTracking
     }
     
+    enum Physics {
+        case realityKit, mujoCo
+    }
+    
     @Observable
     class ViewModel {
         var camera: CameraType = .virtual
@@ -22,6 +26,7 @@ extension BB25RealityView {
         var anchor: AnchorEntity?
         var controlState = JoyStick.ControlState()
         
+        var physics: BB25RealityView.Physics = .mujoCo
         var model: MjModel?
         var data: MjData?
         
@@ -83,7 +88,14 @@ extension BB25RealityView.ViewModel {
                 
             scene.setParent(anchor)
             scene.setScale(4 * .one, relativeTo: nil)
-            scene.setupPhysics()
+            
+            // Set up physics based on the selected physics mode
+            switch self.physics {
+            case .realityKit:
+                scene.setupPhysics()
+            case .mujoCo:
+                scene.setupMuJoCoPhysics()
+            }
             
             self.requestReset = false
             
@@ -93,9 +105,81 @@ extension BB25RealityView.ViewModel {
 
     /// Sets the forces at each frame update
     func applyForces() {
-        if controlState.isActive {
-            anchor?.chassis?.addForce(.init(controlState.rightForce, 0, 0), at: BoEBotProperties.rightWheelPosition, relativeTo: anchor?.chassis)
-            anchor?.chassis?.addForce(.init(controlState.leftForce, 0, 0), at: BoEBotProperties.leftWheelPosition, relativeTo: anchor?.chassis)
+        switch physics {
+        case .realityKit:
+            if controlState.isActive {
+                anchor?.chassis?.addForce(.init(controlState.rightForce, 0, 0), at: BoEBotProperties.rightWheelPosition, relativeTo: anchor?.chassis)
+                anchor?.chassis?.addForce(.init(controlState.leftForce, 0, 0), at: BoEBotProperties.leftWheelPosition, relativeTo: anchor?.chassis)
+            }
+        case .mujoCo:
+            // Apply control inputs to MuJoCo simulation
+            if controlState.isActive {
+                let rightControl = Double(controlState.rightForce)
+                let leftControl = Double(controlState.leftForce)
+                applyControlInputs(controls: [rightControl, leftControl])
+            }
+        }
+    }
+    
+    /// Updates physics simulation based on selected physics mode
+    func updatePhysics() {
+        switch physics {
+        case .realityKit:
+            // RealityKit physics is handled automatically
+            break
+        case .mujoCo:
+            stepSimulation()
+            printCurrentState()
+            updateMuJoCoTransforms()
+        }
+    }
+    
+    /// Updates the transforms of robot components based on MuJoCo simulation results
+    private func updateMuJoCoTransforms() {
+        guard let coordinates = currentCoordinates,
+              let chassis = anchor?.chassis,
+              let rightWheel = anchor?.rightWheel,
+              let leftWheel = anchor?.leftWheel,
+              let rearWheel = anchor?.rearWheel else {
+            return
+        }
+        
+        // Assuming the first 3 coordinates are chassis position (x, y, z),
+        // the next four are the chassis quaternion (qr, qx, qy, qz),
+        // and the next three are the wheel rotations about their axis (right, left, rear)
+        if coordinates.count >= 6 {
+            let chassisPosition = SIMD3<Float>(
+                x: Float(coordinates[0]),
+                y: Float(coordinates[1]),
+                z: Float(coordinates[2])
+            )
+            let chassisRotation = simd_quatf(
+                ix: Float(coordinates[4]),
+                iy: Float(coordinates[5]),
+                iz: Float(coordinates[6]),
+                r: Float(coordinates[3])
+            )
+            
+            // Update chassis transform
+            chassis.setPosition(chassisPosition, relativeTo: chassis.parent)
+            print("chassisPosition = \(chassisPosition), chassisOrientation = \(chassisRotation)")
+            chassis.setOrientation(chassisRotation, relativeTo: chassis.parent)
+            
+            // Update wheel rotations (assuming coordinates 4, 5, 6 are wheel angles)
+            if coordinates.count >= 7 {
+                let rightWheelAngle = Float(coordinates[7]) + 0.5
+                let leftWheelAngle = Float(coordinates[8])
+                let rearWheelAngle = Float(coordinates[9])
+                
+                let rightWheelRotation = simd_quatf(angle: rightWheelAngle, axis: SIMD3<Float>(0, 0, 1)) // Z-axis rotation
+                let leftWheelRotation = simd_quatf(angle: leftWheelAngle, axis: SIMD3<Float>(0, 0, 1))
+                let rearWheelRotation = simd_quatf(angle: rearWheelAngle, axis: SIMD3<Float>(0, 0, 1))
+                
+                rightWheel.setOrientation(rightWheelRotation, relativeTo: chassis)
+                leftWheel.setOrientation(leftWheelRotation, relativeTo: chassis)
+                rearWheel.setOrientation(rearWheelRotation, relativeTo: chassis)
+                print("rightWheel.orientation = \(rightWheel.transform.rotation)")
+            }
         }
     }
     
