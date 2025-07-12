@@ -11,22 +11,27 @@ import BB25_3D_Assets
 import MuJoCo
 
 extension BB25RealityView {
-    enum CameraType {
-        case virtual, spatialTracking
+    enum CameraType: String, CaseIterable {
+        case virtual = "Virtual Camera"
+        case spatialTracking = "Spatial Tracking"
     }
     
-    enum Physics {
-        case realityKit, mujoCo
+    enum Physics: String, CaseIterable {
+        case realityKit = "RealityKit"
+        case muJoCo = "MuJoCo"
+    }
+    
+    enum Reset {
+        case ready, requested, inProgress(hasResetEntity: Bool, hasResetSimulation: Bool)
     }
     
     @Observable
     class ViewModel {
         var camera: CameraType = .virtual
-        var requestReset = false
         var anchor: AnchorEntity?
         var controlState = JoyStick.ControlState()
         
-        var physics: BB25RealityView.Physics = .mujoCo
+        var physics: BB25RealityView.Physics = .muJoCo
         var model: MjModel?
         var data: MjData?
         
@@ -34,6 +39,15 @@ extension BB25RealityView {
         private var lastRealTime: CFAbsoluteTime = 0
         private var simulationStartTime: Double = 0
         private var realTimeStart: CFAbsoluteTime = 0
+        
+        // Reset state management
+        var resetState: Reset = .ready
+        var isReady: Bool {
+            switch resetState {
+            case .ready: true
+            default: false
+            }
+        }
         
         init() {
             model = loadMuJoCoModel()
@@ -62,16 +76,15 @@ extension BB25RealityView.ViewModel {
     }
     
     func resetButtonAction() {
-        requestReset = true
-    }
-    
-    func cameraButtonAction() {
-        camera = camera == .spatialTracking ? .virtual : .spatialTracking
-        requestReset = true
+        resetState = .requested
     }
     
     // Creates a new anchor and adds the robot scene to it. Since the main body is async, there is a callback to send the anchor back to the RealityView content after it is prepared.
     func resetScene(onComplete: @escaping (AnchorEntity) -> Void) {
+        // Prevent multiple simultaneous resets
+        guard case .ready = resetState else { return }
+        resetState = .inProgress(hasResetEntity: false, hasResetSimulation: false)
+        
         DispatchQueue.main.async {
             self.anchor?.removeFromParent()
             
@@ -87,7 +100,7 @@ extension BB25RealityView.ViewModel {
             }
             
             guard let anchor = self.anchor, let scene = try? Entity.load(named: "Scene", in: BB25_3D_Assets.bB25_3D_AssetsBundle) else {
-                self.requestReset = false
+                self.resetState = .ready
                 return
             }
                 
@@ -98,13 +111,14 @@ extension BB25RealityView.ViewModel {
             switch self.physics {
             case .realityKit:
                 scene.setupPhysics()
-            case .mujoCo:
+            case .muJoCo:
                 scene.setupMuJoCoPhysics()
             }
             
-            self.requestReset = false
+            self.resetState = .ready
             
             onComplete(anchor)
+            print("resetScene completed with physics mode: \(self.physics.rawValue)")
         }
     }
 
@@ -116,7 +130,7 @@ extension BB25RealityView.ViewModel {
                 anchor?.chassis?.addForce(.init(controlState.rightForce, 0, 0), at: BoEBotProperties.rightWheelPosition, relativeTo: anchor?.chassis)
                 anchor?.chassis?.addForce(.init(controlState.leftForce, 0, 0), at: BoEBotProperties.leftWheelPosition, relativeTo: anchor?.chassis)
             }
-        case .mujoCo:
+        case .muJoCo:
             // TODO: note, I'm applying the .pi scale factor here to speed it up a bit, but thats somewhat of a placeholder
             let rightControl = .pi * Double(controlState.rightForce)
             let leftControl = .pi * Double(controlState.leftForce)
@@ -130,7 +144,7 @@ extension BB25RealityView.ViewModel {
         case .realityKit:
             // RealityKit physics is handled automatically
             break
-        case .mujoCo:
+        case .muJoCo:
             stepSimulation()
             updateMuJoCoTransforms()
         }
@@ -253,6 +267,10 @@ extension BB25RealityView.ViewModel {
     
     /// Resets the simulation to initial conditions
     func resetSimulation() {
+        // Only reset simulation once per reset cycle
+        guard case .inProgress(_, let hasResetSimulation) = resetState, !hasResetSimulation else { return }
+        resetState = .inProgress(hasResetEntity: true, hasResetSimulation: true)
+        
         guard let model, var data else { return }
         
         model.reset(data: &data)

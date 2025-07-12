@@ -29,31 +29,76 @@ struct BB25RealityView: View {
             }
         
         } update: { content in
-            if viewModel.requestReset {
+            if case .requested = viewModel.resetState {
                 switch viewModel.camera {
                 case .virtual: content.camera = .virtual
                 case .spatialTracking: content.camera = .spatialTracking
                 }
                 viewModel.resetScene(onComplete: content.add)
+                if viewModel.physics == .muJoCo {
+                    viewModel.resetSimulation()
+                }
             }
         }
         .realityViewCameraControls(.orbit)
         .navigationTitle("BB25")
         .toolbar {
-            ToolbarItemGroup(placement: .bottomBar) {
-                Button("Reset", systemImage: "arrow.counterclockwise", action: viewModel.resetButtonAction)
-                    .disabled(viewModel.requestReset)
+            ToolbarItem(placement: .topBarLeading) {
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(viewModel.physics.rawValue).font(.headline)
+                    Text("Physics Engine").font(.caption2)
+                }
+            }
+            
+            ToolbarItemGroup(placement: .primaryAction) {
 #if os(iOS)
-                Spacer()
-                Button("Camera", systemImage: "camera", action: viewModel.cameraButtonAction)
-                    .disabled(viewModel.requestReset)
+                cameraMenu
 #endif
+                physicsMenu
+                resetButton
             }
         }
         .overlay(alignment: .bottom) {
             JoyStick(controlState: $viewModel.controlState)
         }
         .ignoresSafeArea(.all)
+    }
+    
+    var cameraMenu: some View {
+        Menu {
+            ForEach(CameraType.allCases, id: \.self) { camera in
+                Button {
+                    viewModel.camera = camera
+                    viewModel.resetState = .requested
+                } label: {
+                    Text(viewModel.camera == camera ? "⭐ \(camera.rawValue) ⭐" : camera.rawValue)
+                }
+            }
+        } label: {
+            Label("Camera", systemImage: "camera")
+        }
+        .disabled(!viewModel.isReady)
+    }
+    
+    var physicsMenu: some View {
+        Menu {
+            ForEach(Physics.allCases, id: \.self) { physics in
+                Button {
+                    viewModel.physics = physics
+                    viewModel.resetState = .requested
+                } label: {
+                    Text(viewModel.physics == physics ? "⭐ \(physics.rawValue) ⭐" : physics.rawValue)
+                }
+            }
+        } label: {
+            Label("Physics", systemImage: "atom")
+        }
+        .disabled(!viewModel.isReady)
+    }
+    
+    var resetButton: some View {
+        Button("Reset", systemImage: "arrow.counterclockwise", action: viewModel.resetButtonAction)
+            .disabled(!viewModel.isReady)
     }
 }
 
