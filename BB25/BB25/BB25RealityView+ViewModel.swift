@@ -33,9 +33,6 @@ extension BB25RealityView {
         init() {
             model = loadMuJoCoModel()
             data = model?.makeData()
-            printCurrentState()
-            stepSimulation()
-            printCurrentState()
         }
     }
 }
@@ -129,58 +126,25 @@ extension BB25RealityView.ViewModel {
             break
         case .mujoCo:
             stepSimulation()
-            printCurrentState()
             updateMuJoCoTransforms()
         }
     }
     
     /// Updates the transforms of robot components based on MuJoCo simulation results
     private func updateMuJoCoTransforms() {
-        guard let coordinates = currentCoordinates,
-              let chassis = anchor?.chassis,
-              let rightWheel = anchor?.rightWheel,
-              let leftWheel = anchor?.leftWheel,
-              let rearWheel = anchor?.rearWheel else {
-            return
-        }
+        // Update chassis transform
+        anchor?.chassis?.setPosition(chassisPosition ?? .zero, relativeTo: anchor?.chassis?.parent)
+        anchor?.chassis?.setOrientation(chassisRotation ?? .init(), relativeTo: anchor?.chassis?.parent)
         
-        // Assuming the first 3 coordinates are chassis position (x, y, z),
-        // the next four are the chassis quaternion (qr, qx, qy, qz),
-        // and the next three are the wheel rotations about their axis (right, left, rear)
-        if coordinates.count >= 6 {
-            let chassisPosition = SIMD3<Float>(
-                x: Float(coordinates[0]),
-                y: Float(coordinates[1]),
-                z: Float(coordinates[2])
-            )
-            let chassisRotation = simd_quatf(
-                ix: Float(coordinates[4]),
-                iy: Float(coordinates[5]),
-                iz: Float(coordinates[6]),
-                r: Float(coordinates[3])
-            )
-            
-            // Update chassis transform
-            chassis.setPosition(chassisPosition, relativeTo: chassis.parent)
-            print("chassisPosition = \(chassisPosition), chassisOrientation = \(chassisRotation)")
-            chassis.setOrientation(chassisRotation, relativeTo: chassis.parent)
-            
-            // Update wheel rotations (assuming coordinates 4, 5, 6 are wheel angles)
-            if coordinates.count >= 7 {
-                let rightWheelAngle = Float(coordinates[7]) + 0.5
-                let leftWheelAngle = Float(coordinates[8])
-                let rearWheelAngle = Float(coordinates[9])
-                
-                let rightWheelRotation = simd_quatf(angle: rightWheelAngle, axis: SIMD3<Float>(0, 0, 1)) // Z-axis rotation
-                let leftWheelRotation = simd_quatf(angle: leftWheelAngle, axis: SIMD3<Float>(0, 0, 1))
-                let rearWheelRotation = simd_quatf(angle: rearWheelAngle, axis: SIMD3<Float>(0, 0, 1))
-                
-                rightWheel.setOrientation(rightWheelRotation, relativeTo: chassis)
-                leftWheel.setOrientation(leftWheelRotation, relativeTo: chassis)
-                rearWheel.setOrientation(rearWheelRotation, relativeTo: chassis)
-                print("rightWheel.orientation = \(rightWheel.transform.rotation)")
-            }
-        }
+        // Set wheel positions relative to chassis (these should be fixed)
+        anchor?.rightWheel?.setPosition(BoEBotProperties.rightWheelPosition, relativeTo: anchor?.chassis)
+        anchor?.leftWheel?.setPosition(BoEBotProperties.leftWheelPosition, relativeTo: anchor?.chassis)
+        anchor?.rearWheel?.setPosition(BoEBotProperties.rearWheelPosition, relativeTo: anchor?.chassis)
+        
+        // Set wheel orientations relative to chassis
+        anchor?.rightWheel?.setOrientation(rightWheelRotation ?? .init(), relativeTo: anchor?.chassis)
+        anchor?.leftWheel?.setOrientation(leftWheelRotation ?? .init(), relativeTo: anchor?.chassis)
+        anchor?.rearWheel?.setOrientation(rearWheelRotation ?? .init(), relativeTo: anchor?.chassis)
     }
     
     /// Steps the MuJoCo simulation
@@ -199,6 +163,46 @@ extension BB25RealityView.ViewModel {
         return data.qpos.asDoubleArray
     }
     
+    /// Assuming the first 3 coordinates are chassis position (x, y, z)
+    var chassisPosition: SIMD3<Float>? {
+        guard let data else { return nil }
+        return SIMD3<Float>(x: Float(data.qpos[0]), y: Float(data.qpos[1]), z: Float(data.qpos[2]) - 0.05) // TODO: remove this 0.05 offset
+    }
+    
+    /// The next four are the chassis quaternion (qr, qx, qy, qz),
+    var chassisRotation: simd_quatf? {
+        guard let data else { return nil }
+        return simd_quatf(
+            ix: Float(data.qpos[4]),
+            iy: Float(data.qpos[5]),
+            iz: Float(data.qpos[6]),
+            r: Float(data.qpos[3])
+        )
+    }
+    
+    /// The next three are the wheel rotations about their axis (right, left, rear)
+    var rightWheelRotation: simd_quatf? {
+        guard let data else { return nil }
+        return simd_mul(
+            simd_quatf(angle: -.pi/2, axis: .init(1, 0, 0)),
+            simd_quatf(angle: Float(data.qpos[7]), axis: SIMD3<Float>(0, 0, 1))
+        )
+    }
+    var leftWheelRotation: simd_quatf? {
+        guard let data else { return nil }
+        return simd_mul(
+            simd_quatf(angle: .pi/2, axis: .init(1, 0, 0)),
+            simd_quatf(angle: Float(data.qpos[8]), axis: SIMD3<Float>(0, 0, 1))
+        )
+    }
+    var rearWheelRotation: simd_quatf? {
+        guard let data else { return nil }
+        return simd_mul(
+            simd_quatf(angle: -.pi/2, axis: .init(1, 0, 0)),
+            simd_quatf(angle: Float(data.qpos[9]), axis: SIMD3<Float>(0, 0, 1))
+        )
+    }
+
     /// Reads the current generalized velocities (qvel)
     var currentVelocities: [Double]? {
         guard let data else { return nil }
