@@ -40,11 +40,11 @@ struct JoyStick: View {
         .gesture(controlDragGesture)
         .frame(width: Constants.padSize, height: Constants.padSize)
         .padding()
-        .background(
-            .ultraThinMaterial,
-            in: RoundedRectangle(cornerRadius: Constants.stickRadius)
-        )
-        .mask(gradientMask)
+        .background {
+            RoundedRectangle(cornerRadius: Constants.stickRadius)
+                .fill(.ultraThinMaterial)
+                .mask(gradientMask)
+        }
         .padding()
         .padding(.bottom)
     }
@@ -72,8 +72,8 @@ struct JoyStick: View {
             // Calculate opacity based on control direction
             // For linear control: positive (forward) brightens top, negative (reverse) brightens bottom
             // For angular control: positive (counter-clockwise) brightens left, negative (clockwise) brightens right
-            let linearEffect = 0.25 * (controlState.linear + 1)
-            let angularEffect = 0.25 * (controlState.angular + 1)
+            let linearEffect = 0.5 * (controlState.linear + 1)
+            let angularEffect = 0.5 * (controlState.angular + 1)
             
             // When linear is positive: start (top) should be bright, end (bottom) should be dark
             // When linear is negative: start (bottom) should be bright, end (top) should be dark
