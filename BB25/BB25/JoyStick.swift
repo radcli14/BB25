@@ -60,7 +60,7 @@ struct JoyStick: View {
     var gradientMask: some View {
         RadialGradient(
             gradient: backgroundGradient,
-            center: .init(x: 0.5 * (1.0 - controlState.angular), y: 0.5 * (1.0 - controlState.linear)),
+            center: controlState.asUnitPoint,
             startRadius: Constants.stickRadius,
             endRadius: Constants.padSize
         )
@@ -111,6 +111,10 @@ struct JoyStick: View {
         
         var leftForce: Float {
             BoEBotProperties.forceGainFactor * Float(linear - angular)
+        }
+        
+        var asUnitPoint: UnitPoint {
+            UnitPoint(x: 0.5 * (1.0 - angular), y: 0.5 * (1.0 - linear))
         }
     }
     
