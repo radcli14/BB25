@@ -71,11 +71,8 @@ struct BB25RealityView: View {
     var cameraMenu: some View {
         Menu {
             ForEach(CameraType.allCases, id: \.self) { camera in
-                Button {
+                Button(viewModel.camera == camera ? "⭐ \(camera.rawValue) ⭐" : camera.rawValue) {
                     viewModel.camera = camera
-                    viewModel.resetState = .requested
-                } label: {
-                    Text(viewModel.camera == camera ? "⭐ \(camera.rawValue) ⭐" : camera.rawValue)
                 }
             }
         } label: {
@@ -87,11 +84,8 @@ struct BB25RealityView: View {
     var physicsMenu: some View {
         Menu {
             ForEach(Physics.allCases, id: \.self) { physics in
-                Button {
+                Button(viewModel.physics == physics ? "⭐ \(physics.rawValue) ⭐" : physics.rawValue) {
                     viewModel.physics = physics
-                    viewModel.resetState = .requested
-                } label: {
-                    Text(viewModel.physics == physics ? "⭐ \(physics.rawValue) ⭐" : physics.rawValue)
                 }
             }
         } label: {

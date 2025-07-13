@@ -58,10 +58,13 @@ struct JoyStick: View {
     }
     
     var gradientMask: some View {
-        LinearGradient(
+        RadialGradient(
             gradient: Gradient(stops: gradientStops),
-            startPoint: gradientStartPoint,
-            endPoint: gradientEndPoint
+            center: .init(x: -controlState.angular, y: -controlState.linear),
+            startRadius: Constants.stickRadius,
+            endRadius: 0.25 * Constants.padSize
+            //startPoint: gradientStartPoint,
+            //endPoint: gradientEndPoint
         )
     }
     
@@ -93,7 +96,7 @@ struct JoyStick: View {
         }
     }
     
-    private var gradientStartPoint: UnitPoint {
+    /*private var gradientStartPoint: UnitPoint {
         // Calculate start point based on control values
         // When both controls are active, create diagonal gradients
         let x = 0.5 - (controlState.angular * 0.5)  // Reversed angular direction
@@ -107,7 +110,7 @@ struct JoyStick: View {
         let x = 0.5 + (controlState.angular * 0.5)  // Reversed angular direction
         let y = 0.5 + (controlState.linear * 0.5)
         return UnitPoint(x: x, y: y)
-    }
+    }*/
     
     struct ControlState {
         var linear = 0.0  // Positive = forward

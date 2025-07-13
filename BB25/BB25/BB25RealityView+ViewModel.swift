@@ -27,11 +27,22 @@ extension BB25RealityView {
     
     @Observable
     class ViewModel {
-        var camera: CameraType = .virtual
+        var camera: CameraType = .virtual {
+            didSet {
+                resetState = .requested
+            }
+        }
+        
         var anchor: AnchorEntity?
+        
         var controlState = JoyStick.ControlState()
         
-        var physics: BB25RealityView.Physics = .muJoCo
+        var physics: BB25RealityView.Physics = .muJoCo {
+            didSet {
+                resetState = .requested
+            }
+        }
+        
         var model: MjModel?
         var data: MjData?
         
@@ -75,9 +86,13 @@ extension BB25RealityView.ViewModel {
         return nil
     }
     
+    // MARK: - Button Actions
+    
     func resetButtonAction() {
         resetState = .requested
     }
+    
+    // MARK: - Reset
     
     private enum ResetStateTransition {
         case startedEntity, startedSimulation, completedEntity, completedSimulation
@@ -158,7 +173,30 @@ extension BB25RealityView.ViewModel {
             print("resetScene completed with physics mode: \(self.physics.rawValue)")
         }
     }
+    
+    /// Resets the MuJoCo simulation to initial conditions
+    func resetSimulation() {
+        // Only reset simulation once per reset cycle
+        let shouldReturn = updateResetState(for: .startedSimulation)
+        if shouldReturn { return }
+        
+        if let model, var data {
+            model.reset(data: &data)
+            
+            // Reset real-time tracking
+            lastRealTime = CFAbsoluteTimeGetCurrent()
+            realTimeStart = lastRealTime
+            simulationStartTime = 0
+            
+            print("Simulation reset to initial conditions")
+        }
+        
+        // Update reset state, either inProgress with hasResetSimulation = true if still waiting for entity, or ready if complete
+        let _ = updateResetState(for: .completedSimulation)
+    }
 
+    // MARK: - Physics
+    
     /// Sets the forces at each frame update
     func applyForces() {
         switch physics {
@@ -296,27 +334,6 @@ extension BB25RealityView.ViewModel {
         for (index, control) in controls.enumerated() {
             data.ctrl[index] = control
         }
-    }
-    
-    /// Resets the simulation to initial conditions
-    func resetSimulation() {
-        // Only reset simulation once per reset cycle
-        let shouldReturn = updateResetState(for: .startedSimulation)
-        if shouldReturn { return }
-        
-        if let model, var data {
-            model.reset(data: &data)
-            
-            // Reset real-time tracking
-            lastRealTime = CFAbsoluteTimeGetCurrent()
-            realTimeStart = lastRealTime
-            simulationStartTime = 0
-            
-            print("Simulation reset to initial conditions")
-        }
-        
-        // Update reset state, either inProgress with hasResetSimulation = true if still waiting for entity, or ready if complete
-        let _ = updateResetState(for: .completedSimulation)
     }
 }
 
