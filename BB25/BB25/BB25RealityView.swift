@@ -29,7 +29,8 @@ struct BB25RealityView: View {
             }
         
         } update: { content in
-            if case .requested = viewModel.resetState {
+            switch viewModel.resetState {
+            case .requested:
                 switch viewModel.camera {
                 case .virtual: content.camera = .virtual
                 case .spatialTracking: content.camera = .spatialTracking
@@ -38,6 +39,7 @@ struct BB25RealityView: View {
                 if viewModel.physics == .muJoCo {
                     viewModel.resetSimulation()
                 }
+            default: break
             }
         }
         .realityViewCameraControls(.orbit)
@@ -63,6 +65,8 @@ struct BB25RealityView: View {
         }
         .ignoresSafeArea(.all)
     }
+    
+    // MARK: - Toolbar
     
     var cameraMenu: some View {
         Menu {

@@ -41,7 +41,7 @@ extension BB25RealityView {
         private var realTimeStart: CFAbsoluteTime = 0
         
         // Reset state management
-        var resetState: Reset = .ready
+        var resetState: Reset = .requested
         var isReady: Bool {
             switch resetState {
             case .ready: true
@@ -79,12 +79,48 @@ extension BB25RealityView.ViewModel {
         resetState = .requested
     }
     
+    private enum ResetStateTransition {
+        case startedEntity, startedSimulation, completedEntity, completedSimulation
+    }
+    /// Manage the state transitions that occur at the start and end of the entity and simulation reset
+    /// - Parameters:
+    /// - transition: The type of state transition, start or stop to entity or simulation reset
+    /// - Returns:
+    /// - shouldReturn: Tells the calling function it should return rather than continuing, because its job is already complete
+    private func updateResetState(for transition: ResetStateTransition) -> Bool {
+        var shouldReturn = false
+        switch resetState {
+        case .ready:
+            shouldReturn = true
+        case .requested:
+            resetState = .inProgress(hasResetEntity: false, hasResetSimulation: false)
+        case .inProgress(let hasResetEntity, let hasResetSimulation):
+            switch transition {
+            case .startedEntity: shouldReturn = hasResetEntity
+            case .startedSimulation: shouldReturn = hasResetSimulation
+            case .completedEntity:
+                if hasResetSimulation || self.physics == .realityKit || self.data?.time == 0 {
+                    resetState = .ready
+                } else {
+                    resetState = .inProgress(hasResetEntity: true, hasResetSimulation: false)
+                }
+            case .completedSimulation:
+                if hasResetEntity {
+                    resetState = .ready
+                } else {
+                    resetState = .inProgress(hasResetEntity: false, hasResetSimulation: true)
+                }
+            }
+        }
+        return shouldReturn
+    }
+    
     // Creates a new anchor and adds the robot scene to it. Since the main body is async, there is a callback to send the anchor back to the RealityView content after it is prepared.
     func resetScene(onComplete: @escaping (AnchorEntity) -> Void) {
         // Prevent multiple simultaneous resets
-        guard case .ready = resetState else { return }
-        resetState = .inProgress(hasResetEntity: false, hasResetSimulation: false)
-        
+        let shouldReturn = updateResetState(for: .startedEntity)
+        if shouldReturn { return }
+
         DispatchQueue.main.async {
             self.anchor?.removeFromParent()
             
@@ -115,8 +151,9 @@ extension BB25RealityView.ViewModel {
                 scene.setupMuJoCoPhysics()
             }
             
-            self.resetState = .ready
-            
+            // Update reset state, either inProgress with hasResetScene = true if still waiting for simulation, or ready if complete
+            let _ = self.updateResetState(for: .completedEntity)
+
             onComplete(anchor)
             print("resetScene completed with physics mode: \(self.physics.rawValue)")
         }
@@ -138,13 +175,9 @@ extension BB25RealityView.ViewModel {
         }
     }
     
-    /// Updates physics simulation based on selected physics mode
+    /// Updates physics simulation based on selected physics mode (only required by MuJoCo)
     func updatePhysics() {
-        switch physics {
-        case .realityKit:
-            // RealityKit physics is handled automatically
-            break
-        case .muJoCo:
+        if physics == .muJoCo {
             stepSimulation()
             updateMuJoCoTransforms()
         }
@@ -268,19 +301,22 @@ extension BB25RealityView.ViewModel {
     /// Resets the simulation to initial conditions
     func resetSimulation() {
         // Only reset simulation once per reset cycle
-        guard case .inProgress(_, let hasResetSimulation) = resetState, !hasResetSimulation else { return }
-        resetState = .inProgress(hasResetEntity: true, hasResetSimulation: true)
+        let shouldReturn = updateResetState(for: .startedSimulation)
+        if shouldReturn { return }
         
-        guard let model, var data else { return }
+        if let model, var data {
+            model.reset(data: &data)
+            
+            // Reset real-time tracking
+            lastRealTime = CFAbsoluteTimeGetCurrent()
+            realTimeStart = lastRealTime
+            simulationStartTime = 0
+            
+            print("Simulation reset to initial conditions")
+        }
         
-        model.reset(data: &data)
-        
-        // Reset real-time tracking
-        lastRealTime = CFAbsoluteTimeGetCurrent()
-        realTimeStart = lastRealTime
-        simulationStartTime = 0
-        
-        print("Simulation reset to initial conditions")
+        // Update reset state, either inProgress with hasResetSimulation = true if still waiting for entity, or ready if complete
+        let _ = updateResetState(for: .completedSimulation)
     }
 }
 
