@@ -59,58 +59,29 @@ struct JoyStick: View {
     
     var gradientMask: some View {
         RadialGradient(
-            gradient: Gradient(stops: gradientStops),
-            center: .init(x: -controlState.angular, y: -controlState.linear),
+            gradient: backgroundGradient,
+            center: .init(x: 0.5 * (1.0 - controlState.angular), y: 0.5 * (1.0 - controlState.linear)),
             startRadius: Constants.stickRadius,
-            endRadius: 0.25 * Constants.padSize
-            //startPoint: gradientStartPoint,
-            //endPoint: gradientEndPoint
+            endRadius: Constants.padSize
         )
     }
     
-    private var gradientStops: [Gradient.Stop] {
+    private var backgroundGradient: Gradient {
         let baseOpacity = 0.5
+        // Defines the differential opacity between the high opacity location of the joystick cursor,
+        // and the low opacity in the opposite direction. Based on the norm of the control magnitude.
+        let opacityDelta = 0.25 * sqrt(pow(controlState.linear, 2) + pow(controlState.angular, 2))
         
-        if controlState.linear != 0 || controlState.angular != 0 {
-            // Calculate opacity based on control direction
-            // For linear control: positive (forward) brightens top, negative (reverse) brightens bottom
-            // For angular control: positive (counter-clockwise) brightens left, negative (clockwise) brightens right
-            let linearEffect = 0.5 * (controlState.linear + 1)
-            let angularEffect = 0.5 * (controlState.angular + 1)
-            
-            // When linear is positive: start (top) should be bright, end (bottom) should be dark
-            // When linear is negative: start (bottom) should be bright, end (top) should be dark
-            let startOpacity = baseOpacity + linearEffect + angularEffect
-            let endOpacity = baseOpacity - linearEffect - angularEffect
-            
-            return [
+        // Start = most opaque, end = most transparent
+        let startOpacity = baseOpacity + opacityDelta
+        let endOpacity = baseOpacity - opacityDelta
+        
+        return Gradient(stops: [
                 .init(color: .white.opacity(startOpacity), location: 0),
                 .init(color: .white.opacity(endOpacity), location: 1)
             ]
-        } else {
-            // No control - uniform 50% opacity
-            return [
-                .init(color: .white.opacity(baseOpacity), location: 0),
-                .init(color: .white.opacity(baseOpacity), location: 1)
-            ]
-        }
+        )
     }
-    
-    /*private var gradientStartPoint: UnitPoint {
-        // Calculate start point based on control values
-        // When both controls are active, create diagonal gradients
-        let x = 0.5 - (controlState.angular * 0.5)  // Reversed angular direction
-        let y = 0.5 - (controlState.linear * 0.5)
-        return UnitPoint(x: x, y: y)
-    }
-    
-    private var gradientEndPoint: UnitPoint {
-        // Calculate end point based on control values
-        // Opposite direction from start point
-        let x = 0.5 + (controlState.angular * 0.5)  // Reversed angular direction
-        let y = 0.5 + (controlState.linear * 0.5)
-        return UnitPoint(x: x, y: y)
-    }*/
     
     struct ControlState {
         var linear = 0.0  // Positive = forward
