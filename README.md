@@ -3,4 +3,6 @@
 
 ![Blender render of the BoE Bot](Assets/BoEBotRender_wShield.jpg)
 
-![Driving in virtual camera mode](Assets/boeBotVirtualCamera.gif)
+| Virtual | Spatial |
+|---|---|
+| ![virtual camera mode](Assets/boeBotVirtualCamera.gif) | ![spatial camera mode](Assets/boeBotSpatialCamera.gif) |
