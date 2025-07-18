@@ -53,7 +53,7 @@ struct BB25RealityView: View {
             }
             
             ToolbarItemGroup(placement: .primaryAction) {
-#if os(iOS)
+#if os(ios)
                 cameraMenu
 #endif
                 physicsMenu

@@ -1,5 +1,9 @@
 {
   "pathsToIds" : {
     "BB25_3D_Assets\/Sources\/BB25_3D_Assets\/BB25_3D_Assets.rkassets\/Scene.usda" : "F2451F18-E580-4148-9879-D2D30F28F66A"
+  },
+  "projectID" : 4094474086768776303,
+  "uuidToIntID" : {
+    "F2451F18-E580-4148-9879-D2D30F28F66A" : -23971783910189418
   }
 }

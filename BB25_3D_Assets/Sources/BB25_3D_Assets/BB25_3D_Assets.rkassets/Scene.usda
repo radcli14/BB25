@@ -304,7 +304,7 @@ def Xform "Root"
         uniform token axis = "Y"
         double height = 1
         rel material:binding = </Root/X/Red>
-        double radius = 0.001
+        double radius = 0.0025
         quatf xformOp:orient = (0.70710677, 0, 0, 0.70710677)
         uniform token[] xformOpOrder = ["xformOp:translate", "xformOp:orient", "xformOp:scale"]
 
@@ -334,7 +334,7 @@ def Xform "Root"
         uniform token axis = "Y"
         double height = 1
         rel material:binding = </Root/Y/Green>
-        double radius = 0.001
+        double radius = 0.0025
 
         def Material "Green"
         {
@@ -362,8 +362,8 @@ def Material "GridMaterial"
         colorSpace = "srgb_texture"
         customData = {
             dictionary realitykit = {
-                float2 positionInSubgraph = (-449.4229, 348.09995)
-                int stackingOrderInSubgraph = 1435
+                float2 positionInSubgraph = (-471.4206, 326.98947)
+                int stackingOrderInSubgraph = 1617
             }
         }
     )
@@ -387,7 +387,7 @@ def Material "GridMaterial"
     token outputs:realitykit:vertex
     token outputs:surface.connect = </GridMaterial/DefaultSurfaceShader.outputs:surface>
     float2 ui:nodegraph:realitykit:subgraphOutputs:pos = (-2.9951794, 406.07605)
-    int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 1435
+    int ui:nodegraph:realitykit:subgraphOutputs:stackingOrder = 1615
 
     def Shader "DefaultSurfaceShader" (
         active = false
@@ -402,6 +402,7 @@ def Material "GridMaterial"
     def Shader "PreviewSurface"
     {
         uniform token info:id = "ND_UsdPreviewSurface_surfaceshader"
+        float inputs:clearcoat
         float inputs:clearcoatRoughness
         color3f inputs:diffuseColor = (0, 0, 0) (
             colorSpace = "srgb_texture"
@@ -412,7 +413,7 @@ def Material "GridMaterial"
         float3 inputs:normal
         float inputs:occlusion
         float inputs:opacity = 0.2
-        float inputs:opacity.connect = </GridMaterial/IfGreaterOrEqual_4.outputs:out>
+        float inputs:opacity.connect = </GridMaterial/TiledImage.outputs:out>
         float inputs:roughness = 1
         token outputs:out
         float2 ui:nodegraph:node:pos = (-225.80807, 289.92102)
@@ -481,6 +482,55 @@ def Material "GridMaterial"
         float outputs:out
         float2 ui:nodegraph:node:pos = (-667.6573, 200.73163)
         int ui:nodegraph:node:stackingOrder = 1492
+    }
+
+    def Shader "TiledImage"
+    {
+        uniform token info:id = "ND_tiledimage_float"
+        float inputs:default
+        asset inputs:file = @gridSquare.png@
+        string inputs:filtertype = "cubic"
+        float2 inputs:realworldimagesize = (0.1, 0.1)
+        float2 inputs:realworldimagesize.connect = </GridMaterial/Combine2_1.outputs:out>
+        float2 inputs:realworldtilesize = (1, 1)
+        float2 inputs:texcoord.connect = </GridMaterial/Combine2.outputs:out>
+        float2 inputs:uvoffset
+        float2 inputs:uvtiling = (1, 1)
+        float outputs:out
+        float2 ui:nodegraph:node:pos = (-678.11566, 504.05603)
+        int ui:nodegraph:node:stackingOrder = 1697
+        string[] ui:nodegraph:realitykit:node:attributesShowingChildren = ["inputs:texcoord"]
+    }
+
+    def Shader "Separate3"
+    {
+        uniform token info:id = "ND_separate3_vector3"
+        float3 inputs:in.connect = </GridMaterial/Position.outputs:out>
+        float outputs:outx
+        float outputs:outy
+        float outputs:outz
+        float2 ui:nodegraph:node:pos = (-1125.5416, 409.08853)
+        int ui:nodegraph:node:stackingOrder = 1706
+    }
+
+    def Shader "Combine2"
+    {
+        uniform token info:id = "ND_combine2_vector2"
+        float inputs:in1.connect = </GridMaterial/Separate3.outputs:outx>
+        float inputs:in2.connect = </GridMaterial/Separate3.outputs:outz>
+        float2 outputs:out
+        float2 ui:nodegraph:node:pos = (-947.9594, 411.69067)
+        int ui:nodegraph:node:stackingOrder = 1708
+    }
+
+    def Shader "Combine2_1"
+    {
+        uniform token info:id = "ND_combine2_vector2"
+        float inputs:in1.connect = </GridMaterial.inputs:LineInterval>
+        float inputs:in2.connect = </GridMaterial.inputs:LineInterval>
+        float2 outputs:out
+        float2 ui:nodegraph:node:pos = (-1187.8329, 652.6467)
+        int ui:nodegraph:node:stackingOrder = 1704
     }
 }
 

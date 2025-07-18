@@ -4,7 +4,41 @@
       [
         "F2451F18-E580-4148-9879-D2D30F28F66A",
         "Root",
-        "Base"
+        "Y"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "F2451F18-E580-4148-9879-D2D30F28F66A",
+        "Root"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "F2451F18-E580-4148-9879-D2D30F28F66A",
+        "GridMaterial"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "F2451F18-E580-4148-9879-D2D30F28F66A",
+        "Root",
+        "BoEBot"
+      ],
+      {
+        "isExpanded" : true,
+        "isLocked" : false
+      },
+      [
+        "F2451F18-E580-4148-9879-D2D30F28F66A",
+        "Root",
+        "X"
       ],
       {
         "isExpanded" : true,
@@ -23,41 +57,7 @@
       [
         "F2451F18-E580-4148-9879-D2D30F28F66A",
         "Root",
-        "BoEBot"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "F2451F18-E580-4148-9879-D2D30F28F66A",
-        "Root",
-        "Y"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "F2451F18-E580-4148-9879-D2D30F28F66A",
-        "GridMaterial"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "F2451F18-E580-4148-9879-D2D30F28F66A",
-        "Root",
-        "X"
-      ],
-      {
-        "isExpanded" : true,
-        "isLocked" : false
-      },
-      [
-        "F2451F18-E580-4148-9879-D2D30F28F66A",
-        "Root"
+        "Base"
       ],
       {
         "isExpanded" : true,
